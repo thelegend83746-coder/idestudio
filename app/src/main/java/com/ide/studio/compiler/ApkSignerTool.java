@@ -36,6 +36,10 @@ public class ApkSignerTool {
         void onLog(String line);
     }
 
+    public static boolean sign(Context context, File inputApk, File outputApk, LogCallback logger) {
+        return signApkArchive(context, inputApk, outputApk, logger);
+    }
+
     public static boolean packageAndSign(Context context, File resourcesApk, File dexDir, File outputSignedApk, LogCallback logger) {
         try {
             outputSignedApk.getParentFile().mkdirs();

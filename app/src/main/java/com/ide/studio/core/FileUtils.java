@@ -38,12 +38,21 @@ public class FileUtils {
         return fileOrDir.delete();
     }
 
-    public static void zipDirectory(File sourceDir, File zipFile) throws IOException {
-        if (zipFile.getParentFile() != null) {
-            zipFile.getParentFile().mkdirs();
-        }
-        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
-            zipFolderRecursive(sourceDir, sourceDir, zos);
+    public static boolean deleteDirectory(File dir) {
+        return deleteRecursive(dir);
+    }
+
+    public static boolean zipDirectory(File sourceDir, File zipFile) {
+        try {
+            if (zipFile.getParentFile() != null) {
+                zipFile.getParentFile().mkdirs();
+            }
+            try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
+                zipFolderRecursive(sourceDir, sourceDir, zos);
+            }
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 
