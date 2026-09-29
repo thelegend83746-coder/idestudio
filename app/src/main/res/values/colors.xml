@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand Primary & Accents -->
+    <color name="primary_purple">#5844ED</color>
+    <color name="primary_purple_dark">#4330D0</color>
+    <color name="primary_purple_light">#EEF2FF</color>
+    <color name="accent_cyan">#00BCD4</color>
+    <color name="run_green">#10B981</color>
+    <color name="run_green_pressed">#059669</color>
+    <color name="action_reject_red">#EF4444</color>
+    <color name="active_tab_red">#D32F2F</color>
+
+    <!-- Surfaces & Backgrounds -->
+    <color name="bg_light">#F8F9FA</color>
+    <color name="surface_light">#FFFFFF</color>
+    <color name="border_light">#E5E7EB</color>
+    <color name="text_primary_light">#111827</color>
+    <color name="text_secondary_light">#6B7280</color>
+
+    <color name="bg_dark">#121212</color>
+    <color name="surface_dark">#1E1E2E</color>
+    <color name="border_dark">#2D3748</color>
+    <color name="text_primary_dark">#F9FAFB</color>
+    <color name="text_secondary_dark">#9CA3AF</color>
+
+    <!-- Editor Palette (Darcula / Dark Theme) -->
+    <color name="editor_bg_dark">#2B2B2B</color>
+    <color name="editor_gutter_dark">#313335</color>
+    <color name="editor_line_numbers_dark">#606366</color>
+    <color name="editor_current_line_dark">#323232</color>
+    <color name="syntax_keyword_dark">#CC7832</color>
+    <color name="syntax_annotation_dark">#BBB529</color>
+    <color name="syntax_type_dark">#4EC9B0</color>
+    <color name="syntax_method_dark">#FFC66D</color>
+    <color name="syntax_string_dark">#6A8759</color>
+    <color name="syntax_number_dark">#6897BB</color>
+    <color name="syntax_comment_dark">#808080</color>
+
+    <!-- Badges & Modals -->
+    <color name="custom_toast_bg">#2E2E2E</color>
+    <color name="scrim_backdrop">#66000000</color>
+    <color name="badge_create_file">#00BCD4</color>
+    <color name="badge_write_file">#5844ED</color>
+    <color name="badge_rename_file">#F59E0B</color>
+    <color name="badge_delete_file">#EF4444</color>
+</resources>

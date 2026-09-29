@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">idestudio</string>
+    <string name="projects">Projects</string>
+    <string name="choose_template">Choose Template</string>
+    <string name="configure_project">Configure Project</string>
+    <string name="app_name_label">App Name</string>
+    <string name="package_name_label">Package Name</string>
+    <string name="app_icon_optional">App Icon (Optional)</string>
+    <string name="tap_to_choose_logo">Tap to choose custom logo</string>
+    <string name="btn_exit">EXIT</string>
+    <string name="btn_next">Next</string>
+    <string name="btn_previous">previous</string>
+    <string name="btn_done">Done</string>
+
+    <!-- Templates -->
+    <string name="template_simple_app">Simple App</string>
+    <string name="template_fab_app">FAB App</string>
+    <string name="template_nav_drawer">Navigation Drawer</string>
+    <string name="template_fullscreen_app">Fullscreen App</string>
+
+    <!-- Editor -->
+    <string name="run">Run</string>
+    <string name="save_file">Save File</string>
+    <string name="build_ai">Build AI</string>
+    <string name="assets_file">Assets File</string>
+    <string name="java_file">Java File</string>
+    <string name="resources_file">Resources File</string>
+    <string name="local_library">Local Library</string>
+    <string name="jni_file">Jni File</string>
+    <string name="lib_file">Lib File</string>
+
+    <!-- Build AI -->
+    <string name="ai_hint">Ask Build AI to make changes or write code...</string>
+    <string name="analysis_plan">ANALYSIS / PLAN</string>
+    <string name="applied_successfully">Applied Successfully</string>
+    <string name="rejected">Rejected</string>
+    <string name="approve">Approve</string>
+    <string name="reject">Reject</string>
+
+    <!-- Settings -->
+    <string name="settings">Settings</string>
+    <string name="application_settings">Application</string>
+    <string name="editor_settings">Editor</string>
+    <string name="build_run_settings">Build &amp; Run</string>
+    <string name="about_us">About Us</string>
+    <string name="build_ai_settings">Build AI Settings</string>
+</resources>
