@@ -7,6 +7,9 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Compile Android APK
@@ -23,14 +26,15 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Accept Android SDK Licenses
+        run: |
+          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses || yes | sdkmanager --licenses || true
 
       - name: Make Gradlew Executable
         run: chmod +x ./gradlew
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
@@ -42,10 +46,10 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.0
-          name: "idestudio v1.0.0"
+          tag_name: v1.0.0-${{ github.run_number }}
+          name: "idestudio v1.0.0 (Build ${{ github.run_number }})"
           body: |
-            ## idestudio Release v1.0.0
+            ## idestudio Release Build #${{ github.run_number }}
             - Native Android IDE & Offline Compiler
             - Embedded AAPT2, ECJ, D8, and ApkSigner
             - Android 30–36 Platform SDK support
