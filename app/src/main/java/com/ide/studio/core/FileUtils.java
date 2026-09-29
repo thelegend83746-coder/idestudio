@@ -6,23 +6,32 @@ import java.util.zip.ZipOutputStream;
 
 public class FileUtils {
 
-    public static String readFile(File file) throws IOException {
+    public static String readFile(File file) {
         StringBuilder sb = new StringBuilder();
+        if (file == null || !file.exists()) return "";
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 sb.append(line).append("\n");
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return sb.toString();
     }
 
-    public static void writeFile(File file, String content) throws IOException {
-        if (file.getParentFile() != null) {
-            file.getParentFile().mkdirs();
-        }
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            writer.write(content);
+    public static boolean writeFile(File file, String content) {
+        try {
+            if (file.getParentFile() != null) {
+                file.getParentFile().mkdirs();
+            }
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+                writer.write(content != null ? content : "");
+            }
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
         }
     }
 
