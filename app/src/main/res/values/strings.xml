@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">idestudio</string>
+    <string name="app_name">Build Studio</string>
     <string name="projects">Projects</string>
     <string name="new_project">New Project</string>
     <string name="choose_template">Choose Template</string>

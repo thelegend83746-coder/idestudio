@@ -70,11 +70,26 @@
                 style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="0dp"
                 android:layout_height="44dp"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="6dp"
                 android:layout_weight="1"
-                android:text="Copy Logs"
+                android:text="Copy"
                 android:textColor="@color/primary_purple"
                 app:strokeColor="@color/primary_purple" />
+
+            <!-- Fix with AI Pill -->
+            <Button
+                android:id="@+id/btn_fix_with_ai"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_marginHorizontal="6dp"
+                android:layout_weight="1.3"
+                android:background="@drawable/bg_pill_purple"
+                android:text="Fix with AI"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
 
             <!-- Done Pill -->
             <Button
@@ -82,7 +97,7 @@
                 style="@style/Widget.Material3.Button.TonalButton"
                 android:layout_width="0dp"
                 android:layout_height="44dp"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="6dp"
                 android:layout_weight="1"
                 android:text="Done" />
         </LinearLayout>

@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.ScrollView;
@@ -16,12 +17,18 @@ import android.widget.Toast;
 import com.ide.studio.R;
 
 public class BuildLogDialog {
+    public interface OnFixWithAiListener {
+        void onFixWithAi(String errorLogs);
+    }
+
     private Dialog dialog;
     private TextView tvLogs;
     private ScrollView scrollView;
+    private Button btnFixWithAi;
     private StringBuilder logBuffer = new StringBuilder();
     private Handler mainHandler = new Handler(Looper.getMainLooper());
     private Context context;
+    private OnFixWithAiListener fixListener;
 
     public BuildLogDialog(Context context) {
         this.context = context;
@@ -38,6 +45,7 @@ public class BuildLogDialog {
 
         tvLogs = dialog.findViewById(R.id.tv_logs);
         scrollView = dialog.findViewById(R.id.scroll_logs);
+        btnFixWithAi = dialog.findViewById(R.id.btn_fix_with_ai);
 
         Button btnCopy = dialog.findViewById(R.id.btn_copy_logs);
         Button btnDone = dialog.findViewById(R.id.btn_done);
@@ -51,12 +59,32 @@ public class BuildLogDialog {
             }
         });
 
+        btnFixWithAi.setOnClickListener(v -> {
+            dialog.dismiss();
+            if (fixListener != null) {
+                fixListener.onFixWithAi(logBuffer.toString());
+            }
+        });
+
         btnDone.setOnClickListener(v -> dialog.dismiss());
+    }
+
+    public void setOnFixWithAiListener(OnFixWithAiListener listener) {
+        this.fixListener = listener;
+    }
+
+    public void setFixWithAiVisible(boolean visible) {
+        mainHandler.post(() -> {
+            if (btnFixWithAi != null) {
+                btnFixWithAi.setVisibility(visible ? View.VISIBLE : View.GONE);
+            }
+        });
     }
 
     public void show() {
         logBuffer.setLength(0);
         if (tvLogs != null) tvLogs.setText("");
+        setFixWithAiVisible(false);
         dialog.show();
     }
 
@@ -70,6 +98,10 @@ public class BuildLogDialog {
                 scrollView.fullScroll(ScrollView.FOCUS_DOWN);
             }
         });
+    }
+
+    public String getLogs() {
+        return logBuffer.toString();
     }
 
     public void dismiss() {

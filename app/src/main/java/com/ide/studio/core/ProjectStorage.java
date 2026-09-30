@@ -17,7 +17,8 @@ import java.util.List;
  */
 public class ProjectStorage {
 
-    private static final String BASE_FOLDER_NAME = ".BUILD STUDIO";
+    private static final String BASE_FOLDER_NAME = "BUILD STUDIO";
+    private static final String ALT_FOLDER_NAME = ".BUILD STUDIO";
     private Context mContext;
 
     public ProjectStorage(Context context) {
@@ -46,26 +47,52 @@ public class ProjectStorage {
 
     public static List<Project> loadProjects() {
         List<Project> list = new ArrayList<>();
-        File root = getProjectsRoot();
-        File[] files = root.listFiles();
-        if (files != null) {
-            for (File f : files) {
-                if (f.isDirectory() && !f.getName().equals("Exports") && !f.getName().startsWith(".")) {
-                    File manifest = new File(f, "app/src/main/AndroidManifest.xml");
-                    String pkg = "com.my.app";
-                    if (manifest.exists()) {
-                        try {
-                            String content = FileUtils.readFile(manifest);
-                            int idx = content.indexOf("package=\"");
-                            if (idx != -1) {
-                                int end = content.indexOf("\"", idx + 9);
-                                if (end != -1) {
-                                    pkg = content.substring(idx + 9, end);
+        List<String> seenNames = new ArrayList<>();
+
+        // Check primary and alternate roots
+        File[] roots = new File[]{
+            getProjectsRoot(),
+            new File(Environment.getExternalStorageDirectory(), ALT_FOLDER_NAME)
+        };
+
+        for (File root : roots) {
+            if (root == null || !root.exists()) continue;
+            File[] files = root.listFiles();
+            if (files != null) {
+                for (File f : files) {
+                    if (f.isDirectory() && !f.getName().equals("Exports") && !f.getName().startsWith(".") && !seenNames.contains(f.getName())) {
+                        File manifest = new File(f, "app/src/main/AndroidManifest.xml");
+                        String pkg = "com.my.app";
+                        int minSdk = 21;
+                        int targetSdk = 34;
+                        String template = "Empty Activity";
+
+                        // Read app_config.json if available
+                        File appConfig = new File(f, "app/app_config.json");
+                        if (appConfig.exists()) {
+                            try {
+                                String cfgStr = FileUtils.readFile(appConfig);
+                                org.json.JSONObject cfg = new org.json.JSONObject(cfgStr);
+                                pkg = cfg.optString("package", pkg);
+                                minSdk = cfg.optInt("minSdkVersion", minSdk);
+                                targetSdk = cfg.optInt("targetSdkVersion", targetSdk);
+                                template = cfg.optString("template", template);
+                            } catch (Exception ignored) {}
+                        } else if (manifest.exists()) {
+                            try {
+                                String content = FileUtils.readFile(manifest);
+                                int idx = content.indexOf("package=\"");
+                                if (idx != -1) {
+                                    int end = content.indexOf("\"", idx + 9);
+                                    if (end != -1) {
+                                        pkg = content.substring(idx + 9, end);
+                                    }
                                 }
-                            }
-                        } catch (Exception ignored) {}
+                            } catch (Exception ignored) {}
+                        }
+                        seenNames.add(f.getName());
+                        list.add(new Project(f.getName(), pkg, f.getAbsolutePath(), minSdk, targetSdk, template));
                     }
-                    list.add(new Project(f.getName(), pkg, f.getAbsolutePath()));
                 }
             }
         }
@@ -110,28 +137,39 @@ public class ProjectStorage {
         }
 
         // 2. AndroidManifest.xml
-        String manifest = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                "    package=\"" + packageName + "\">\n\n" +
-                "    <application\n" +
-                "        android:allowBackup=\"true\"\n" +
-                "        android:label=\"" + name + "\"\n" +
-                "        android:icon=\"@drawable/ic_launcher\"\n" +
-                "        android:theme=\"@style/AppTheme\">\n" +
-                "        <activity\n" +
-                "            android:name=\".MainActivity\"\n" +
-                "            android:exported=\"true\">\n" +
-                "            <intent-filter>\n" +
-                "                <action android:name=\"android.intent.action.MAIN\" />\n" +
-                "                <category android:name=\"android.intent.category.LAUNCHER\" />\n" +
-                "            </intent-filter>\n" +
-                "        </activity>\n" +
-                "    </application>\n" +
-                "</manifest>\n";
-        FileUtils.writeFile(new File(appDir, "src/main/AndroidManifest.xml"), manifest);
+        boolean hasActivity = !"No Activity".equalsIgnoreCase(templateType);
+        StringBuilder manifest = new StringBuilder();
+        manifest.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
+        manifest.append("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n");
+        manifest.append("    package=\"").append(packageName).append("\">\n\n");
+        manifest.append("    <application\n");
+        manifest.append("        android:allowBackup=\"true\"\n");
+        manifest.append("        android:label=\"").append(name).append("\"\n");
+        manifest.append("        android:icon=\"@drawable/ic_launcher\"\n");
+        manifest.append("        android:theme=\"@style/AppTheme\">\n");
+
+        if (hasActivity) {
+            manifest.append("        <activity\n");
+            manifest.append("            android:name=\".MainActivity\"\n");
+            manifest.append("            android:exported=\"true\">\n");
+            manifest.append("            <intent-filter>\n");
+            manifest.append("                <action android:name=\"android.intent.action.MAIN\" />\n");
+            manifest.append("                <category android:name=\"android.intent.category.LAUNCHER\" />\n");
+            manifest.append("            </intent-filter>\n");
+            manifest.append("        </activity>\n");
+        }
+        manifest.append("    </application>\n");
+        manifest.append("</manifest>\n");
+        FileUtils.writeFile(new File(appDir, "src/main/AndroidManifest.xml"), manifest.toString());
 
         // 3. Layouts & Code based on template
-        if ("SurfaceView Game".equalsIgnoreCase(templateType)) {
+        if ("No Activity".equalsIgnoreCase(templateType)) {
+            generateNoActivity(javaDir, layoutDir, packageName, name);
+        } else if ("Basic Activity".equalsIgnoreCase(templateType)) {
+            generateBasicActivity(javaDir, layoutDir, packageName, name);
+        } else if ("Compose Activity".equalsIgnoreCase(templateType)) {
+            generateComposeActivity(javaDir, layoutDir, packageName, name);
+        } else if ("SurfaceView Game".equalsIgnoreCase(templateType)) {
             generateSurfaceViewGame(javaDir, layoutDir, packageName, name);
         } else if ("Canvas 2D Game".equalsIgnoreCase(templateType)) {
             generateCanvasGame(javaDir, layoutDir, packageName, name);
@@ -167,14 +205,169 @@ public class ProjectStorage {
         FileUtils.writeFile(new File(projectDir, "settings.gradle"), "include ':app'\n");
 
         // 6. Metadata
-        String appConfig = "{\n  \"minSdkVersion\": " + minSdk + ",\n  \"package\": \"" + packageName + "\",\n  \"targetSdkVersion\": " + targetSdk + ",\n  \"versionName\": \"1.0\",\n  \"versionCode\": 1\n}\n";
+        String appConfig = "{\n  \"minSdkVersion\": " + minSdk + ",\n  \"package\": \"" + packageName + "\",\n  \"targetSdkVersion\": " + targetSdk + ",\n  \"template\": \"" + templateType + "\",\n  \"versionName\": \"1.0\",\n  \"versionCode\": 1\n}\n";
         FileUtils.writeFile(new File(appDir, "app_config.json"), appConfig);
 
-        String opened = "[{\"path\": \"" + new File(javaDir, "MainActivity.java").getAbsolutePath() + "\"}]\n";
+        String openedPath = hasActivity
+                ? new File(javaDir, "MainActivity.java").getAbsolutePath()
+                : new File(appDir, "src/main/AndroidManifest.xml").getAbsolutePath();
+        String opened = "[{\"path\": \"" + openedPath + "\"}]\n";
         FileUtils.writeFile(new File(projectDir, "editorOpened.json"), opened);
         FileUtils.writeFile(new File(metaDir, "ai_chat_history.json"), "[]\n");
 
         return new Project(name, packageName, projectDir.getAbsolutePath(), minSdk, targetSdk, templateType);
+    }
+
+    private static void generateNoActivity(File javaDir, File layoutDir, String pkg, String name) {
+        // No Activity template: minimal project without an Activity
+        String placeholder = "// Minimal project without an Activity\n// Add services, receivers, or application components here.\n";
+        FileUtils.writeFile(new File(javaDir, "Placeholder.txt"), placeholder);
+    }
+
+    private static void generateBasicActivity(File javaDir, File layoutDir, String pkg, String name) {
+        String layoutXml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                "    android:layout_width=\"match_parent\"\n" +
+                "    android:layout_height=\"match_parent\"\n" +
+                "    android:background=\"#F8F9FA\">\n\n" +
+                "    <!-- Top Toolbar Header -->\n" +
+                "    <LinearLayout\n" +
+                "        android:id=\"@+id/app_bar\"\n" +
+                "        android:layout_width=\"match_parent\"\n" +
+                "        android:layout_height=\"56dp\"\n" +
+                "        android:background=\"#5844ED\"\n" +
+                "        android:gravity=\"center_vertical\"\n" +
+                "        android:paddingHorizontal=\"16dp\">\n" +
+                "        <TextView\n" +
+                "            android:layout_width=\"wrap_content\"\n" +
+                "            android:layout_height=\"wrap_content\"\n" +
+                "            android:text=\"" + name + "\"\n" +
+                "            android:textColor=\"#FFFFFF\"\n" +
+                "            android:textSize=\"18sp\"\n" +
+                "            android:textStyle=\"bold\" />\n" +
+                "    </LinearLayout>\n\n" +
+                "    <!-- Main Content -->\n" +
+                "    <LinearLayout\n" +
+                "        android:layout_width=\"wrap_content\"\n" +
+                "        android:layout_height=\"wrap_content\"\n" +
+                "        android:layout_centerInParent=\"true\"\n" +
+                "        android:gravity=\"center\"\n" +
+                "        android:orientation=\"vertical\">\n" +
+                "        <TextView\n" +
+                "            android:layout_width=\"wrap_content\"\n" +
+                "            android:layout_height=\"wrap_content\"\n" +
+                "            android:text=\"Basic Activity\"\n" +
+                "            android:textColor=\"#111827\"\n" +
+                "            android:textSize=\"22sp\"\n" +
+                "            android:textStyle=\"bold\" />\n" +
+                "        <TextView\n" +
+                "            android:layout_width=\"wrap_content\"\n" +
+                "            android:layout_height=\"wrap_content\"\n" +
+                "            android:layout_marginTop=\"8dp\"\n" +
+                "            android:text=\"Includes App Bar and Floating Action Button\"\n" +
+                "            android:textColor=\"#6B7280\"\n" +
+                "            android:textSize=\"14sp\" />\n" +
+                "    </LinearLayout>\n\n" +
+                "    <!-- Action Button (FAB Style) -->\n" +
+                "    <Button\n" +
+                "        android:id=\"@+id/btn_action\"\n" +
+                "        android:layout_width=\"56dp\"\n" +
+                "        android:layout_height=\"56dp\"\n" +
+                "        android:layout_alignParentEnd=\"true\"\n" +
+                "        android:layout_alignParentBottom=\"true\"\n" +
+                "        android:layout_margin=\"24dp\"\n" +
+                "        android:background=\"#5844ED\"\n" +
+                "        android:text=\"+\"\n" +
+                "        android:textColor=\"#FFFFFF\"\n" +
+                "        android:textSize=\"24sp\" />\n" +
+                "</RelativeLayout>\n";
+        FileUtils.writeFile(new File(layoutDir, "activity_main.xml"), layoutXml);
+
+        String javaCode = "package " + pkg + ";\n\n" +
+                "import android.app.Activity;\n" +
+                "import android.os.Bundle;\n" +
+                "import android.view.View;\n" +
+                "import android.widget.Button;\n" +
+                "import android.widget.Toast;\n\n" +
+                "public class MainActivity extends Activity {\n" +
+                "    @Override\n" +
+                "    protected void onCreate(Bundle savedInstanceState) {\n" +
+                "        super.onCreate(savedInstanceState);\n" +
+                "        setContentView(R.layout.activity_main);\n\n" +
+                "        Button fab = findViewById(R.id.btn_action);\n" +
+                "        if (fab != null) {\n" +
+                "            fab.setOnClickListener(new View.OnClickListener() {\n" +
+                "                @Override\n" +
+                "                public void onClick(View v) {\n" +
+                "                    Toast.makeText(MainActivity.this, \"Floating action clicked!\", Toast.LENGTH_SHORT).show();\n" +
+                "                }\n" +
+                "            });\n" +
+                "        }\n" +
+                "    }\n" +
+                "}\n";
+        FileUtils.writeFile(new File(javaDir, "MainActivity.java"), javaCode);
+    }
+
+    private static void generateComposeActivity(File javaDir, File layoutDir, String pkg, String name) {
+        String layoutXml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                "    android:layout_width=\"match_parent\"\n" +
+                "    android:layout_height=\"match_parent\"\n" +
+                "    android:background=\"#F8F9FA\"\n" +
+                "    android:orientation=\"vertical\"\n" +
+                "    android:padding=\"20dp\">\n\n" +
+                "    <TextView\n" +
+                "        android:layout_width=\"wrap_content\"\n" +
+                "        android:layout_height=\"wrap_content\"\n" +
+                "        android:text=\"Compose Equivalent UI\"\n" +
+                "        android:textColor=\"#5844ED\"\n" +
+                "        android:textSize=\"22sp\"\n" +
+                "        android:textStyle=\"bold\" />\n\n" +
+                "    <TextView\n" +
+                "        android:layout_width=\"wrap_content\"\n" +
+                "        android:layout_height=\"wrap_content\"\n" +
+                "        android:layout_marginTop=\"8dp\"\n" +
+                "        android:text=\"Java Material 3 Component Architecture\"\n" +
+                "        android:textColor=\"#6B7280\"\n" +
+                "        android:textSize=\"14sp\" />\n\n" +
+                "    <Button\n" +
+                "        android:id=\"@+id/btn_compose_action\"\n" +
+                "        android:layout_width=\"match_parent\"\n" +
+                "        android:layout_height=\"48dp\"\n" +
+                "        android:layout_marginTop=\"24dp\"\n" +
+                "        android:background=\"#5844ED\"\n" +
+                "        android:text=\"Material Action\"\n" +
+                "        android:textColor=\"#FFFFFF\" />\n" +
+                "</LinearLayout>\n";
+        FileUtils.writeFile(new File(layoutDir, "activity_main.xml"), layoutXml);
+
+        String javaCode = "package " + pkg + ";\n\n" +
+                "import android.app.Activity;\n" +
+                "import android.os.Bundle;\n" +
+                "import android.view.View;\n" +
+                "import android.widget.Button;\n" +
+                "import android.widget.Toast;\n\n" +
+                "/**\n" +
+                " * Modern Java Material 3 Component Activity.\n" +
+                " * (Note: Pure Kotlin Compose is not used here; this project is 100% Java-compatible).\n" +
+                " */\n" +
+                "public class MainActivity extends Activity {\n" +
+                "    @Override\n" +
+                "    protected void onCreate(Bundle savedInstanceState) {\n" +
+                "        super.onCreate(savedInstanceState);\n" +
+                "        setContentView(R.layout.activity_main);\n\n" +
+                "        Button btn = findViewById(R.id.btn_compose_action);\n" +
+                "        if (btn != null) {\n" +
+                "            btn.setOnClickListener(new View.OnClickListener() {\n" +
+                "                @Override\n" +
+                "                public void onClick(View v) {\n" +
+                "                    Toast.makeText(MainActivity.this, \"Component tapped!\", Toast.LENGTH_SHORT).show();\n" +
+                "                }\n" +
+                "            });\n" +
+                "        }\n" +
+                "    }\n" +
+                "}\n";
+        FileUtils.writeFile(new File(javaDir, "MainActivity.java"), javaCode);
     }
 
     private static void generateEmptyApp(File javaDir, File layoutDir, String pkg, String name) {

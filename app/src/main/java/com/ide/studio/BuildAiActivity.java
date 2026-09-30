@@ -10,10 +10,12 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.ide.studio.adapter.AiChatAdapter;
+import com.ide.studio.core.BackupManager;
 import com.ide.studio.core.FileUtils;
 import com.ide.studio.core.PreferencesManager;
 import com.ide.studio.model.ActionType;
@@ -34,14 +36,17 @@ import java.util.regex.Pattern;
 
 /**
  * Build AI Pair Programmer Activity.
- * Interacts with Ollama local LLMs (e.g. qwen2.5-coder, deepseek-coder) to generate
- * complete Android applications and 2D/3D games (SurfaceView, Canvas, touch listeners).
- * Implements two-stage responses: Plan cards and Action cards with persistent Approve/Reject.
+ * Interacts with Ollama local and remote LLMs to generate complete Android applications
+ * and components using pure Java and standard Android XML layouts.
+ * Features Plan cards, Action cards with persistent Approve/Reject workflow,
+ * automated backup snapshots, undo AI changes, and compiler error fixing.
  */
 public class BuildAiActivity extends AppCompatActivity implements AiChatAdapter.OnActionCardClickListener {
 
     private ImageView mBtnBack;
     private TextView mTvModelStatus;
+    private TextView mBtnUndoAi;
+    private ImageView mBtnClearChat;
     private ImageView mBtnAiSettings;
     private RecyclerView mRvChat;
     private EditText mEtPrompt;
@@ -70,11 +75,19 @@ public class BuildAiActivity extends AppCompatActivity implements AiChatAdapter.
 
         initViews();
         loadChatHistory();
+
+        // Check for automated fix build error flow
+        String fixError = getIntent().getStringExtra("fix_build_error");
+        if (fixError != null && !fixError.trim().isEmpty()) {
+            handleFixBuildError(fixError.trim());
+        }
     }
 
     private void initViews() {
         mBtnBack = findViewById(R.id.btn_back);
         mTvModelStatus = findViewById(R.id.tv_model_status);
+        mBtnUndoAi = findViewById(R.id.btn_undo_ai);
+        mBtnClearChat = findViewById(R.id.btn_clear_chat);
         mBtnAiSettings = findViewById(R.id.btn_ai_settings);
         mRvChat = findViewById(R.id.rv_chat);
         mEtPrompt = findViewById(R.id.et_prompt);
@@ -83,13 +96,34 @@ public class BuildAiActivity extends AppCompatActivity implements AiChatAdapter.
         mBtnBack.setOnClickListener(v -> finish());
         mBtnAiSettings.setOnClickListener(v -> startActivity(new Intent(BuildAiActivity.this, OllamaSettingsActivity.class)));
 
-        mTvModelStatus.setText("Ollama: " + mPrefs.getActiveAiModel() + " (" + mPrefs.getOllamaHost() + ":" + mPrefs.getOllamaPort() + ")");
+        mBtnUndoAi.setOnClickListener(v -> showUndoAiDialog());
+
+        mBtnClearChat.setOnClickListener(v -> {
+            mAdapter.clearMessages();
+            if (mChatHistoryFile != null) {
+                mChatHistoryFile.delete();
+            }
+            addWelcomeMessage();
+            Toast.makeText(this, "Chat history cleared", Toast.LENGTH_SHORT).show();
+        });
+
+        updateModelStatusHeader();
 
         mRvChat.setLayoutManager(new LinearLayoutManager(this));
         mAdapter = new AiChatAdapter(this, this);
         mRvChat.setAdapter(mAdapter);
 
         mBtnSend.setOnClickListener(v -> sendUserPrompt());
+    }
+
+    private void updateModelStatusHeader() {
+        mTvModelStatus.setText("Ollama: " + mPrefs.getActiveAiModel() + " (" + mPrefs.getOllamaHost() + ":" + mPrefs.getOllamaPort() + ")");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateModelStatusHeader();
     }
 
     private void loadChatHistory() {
@@ -135,9 +169,8 @@ public class BuildAiActivity extends AppCompatActivity implements AiChatAdapter.
 
     private void addWelcomeMessage() {
         AiMessage welcome = new AiMessage("assistant",
-                "Hello! I am Build AI. I can generate full Android applications and 2D/3D games " +
-                        "(using SurfaceView 60FPS loops, Canvas, custom views, physics, and touch listeners). " +
-                        "Ask me to write features, add game mechanics, or fix errors!");
+                "Hello! I am Build AI. I can generate full Android applications and UI features using pure Java and Android XML.\n" +
+                        "Ask me to create activities, add layouts, implement features, or fix compiler errors!");
         mAdapter.addMessage(welcome);
     }
 
@@ -164,6 +197,12 @@ public class BuildAiActivity extends AppCompatActivity implements AiChatAdapter.
         } catch (Exception ignored) {}
     }
 
+    private void handleFixBuildError(String errorLogs) {
+        String prompt = "Fix this compiler/build error:\n\n" + errorLogs;
+        mEtPrompt.setText(prompt);
+        sendUserPrompt();
+    }
+
     private void sendUserPrompt() {
         String prompt = mEtPrompt.getText().toString().trim();
         if (prompt.isEmpty()) return;
@@ -176,7 +215,7 @@ public class BuildAiActivity extends AppCompatActivity implements AiChatAdapter.
         scrollToBottom();
         saveChatHistory();
 
-        // 2. Call Ollama asynchronously
+        // 2. Call Ollama asynchronously with project context
         callOllamaAi(prompt);
     }
 
@@ -186,7 +225,16 @@ public class BuildAiActivity extends AppCompatActivity implements AiChatAdapter.
                 String host = mPrefs.getOllamaHost();
                 int port = mPrefs.getOllamaPort();
                 String model = mPrefs.getActiveAiModel();
-                String endpoint = host + ":" + port + "/api/chat";
+                String apiKey = mPrefs.getOllamaApiKey();
+
+                String endpoint;
+                if (host.startsWith("http://") || host.startsWith("https://")) {
+                    endpoint = host.contains(":") && !host.endsWith("://") && host.lastIndexOf(':') > 6
+                            ? host + "/api/chat"
+                            : host + ":" + port + "/api/chat";
+                } else {
+                    endpoint = "http://" + host + ":" + port + "/api/chat";
+                }
 
                 JSONObject reqJson = new JSONObject();
                 reqJson.put("model", model);
@@ -194,13 +242,27 @@ public class BuildAiActivity extends AppCompatActivity implements AiChatAdapter.
 
                 JSONArray messages = new JSONArray();
 
-                // System instructions
+                // 1. System instructions
                 JSONObject sysMsg = new JSONObject();
                 sysMsg.put("role", "system");
-                sysMsg.put("content", PreferencesManager.DEFAULT_SYSTEM_PROMPT);
+                sysMsg.put("content", mPrefs.getSystemPrompt());
                 messages.put(sysMsg);
 
-                // Add recent history
+                // 2. Provide project context if available
+                if (mProjectRoot != null) {
+                    JSONObject contextMsg = new JSONObject();
+                    contextMsg.put("role", "system");
+                    StringBuilder contextSb = new StringBuilder();
+                    contextSb.append("Project Name: ").append(mProjectRoot.getName()).append("\n");
+                    File appConfig = new File(mProjectRoot, "app/app_config.json");
+                    if (appConfig.exists()) {
+                        contextSb.append("Configuration: ").append(FileUtils.readFile(appConfig)).append("\n");
+                    }
+                    contextMsg.put("content", contextSb.toString());
+                    messages.put(contextMsg);
+                }
+
+                // 3. Add recent history
                 List<AiMessage> history = mAdapter.getMessages();
                 int startIdx = Math.max(0, history.size() - 6);
                 for (int i = startIdx; i < history.size(); i++) {
@@ -217,6 +279,9 @@ public class BuildAiActivity extends AppCompatActivity implements AiChatAdapter.
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json");
+                if (apiKey != null && !apiKey.isEmpty()) {
+                    conn.setRequestProperty("Authorization", "Bearer " + apiKey);
+                }
                 conn.setConnectTimeout(15000);
                 conn.setReadTimeout(60000);
                 conn.setDoOutput(true);
@@ -240,10 +305,18 @@ public class BuildAiActivity extends AppCompatActivity implements AiChatAdapter.
                     String assistantReply = msgObj.getString("content");
 
                     mMainHandler.post(() -> processAssistantResponse(assistantReply));
+                } else if (code == 401 || code == 403) {
+                    mMainHandler.post(() -> {
+                        AiMessage errorMsg = new AiMessage("assistant",
+                                "Ollama Authentication Failed (HTTP " + code + "): Check your API Key in Settings -> AI Build.");
+                        mAdapter.addMessage(errorMsg);
+                        scrollToBottom();
+                        saveChatHistory();
+                    });
                 } else {
                     mMainHandler.post(() -> {
                         AiMessage errorMsg = new AiMessage("assistant",
-                                "Ollama Error (HTTP " + code + "): Ensure Ollama is running at " + endpoint);
+                                "Ollama Error (HTTP " + code + "): Ensure Ollama is running and model '" + model + "' is available.");
                         mAdapter.addMessage(errorMsg);
                         scrollToBottom();
                         saveChatHistory();
@@ -253,7 +326,7 @@ public class BuildAiActivity extends AppCompatActivity implements AiChatAdapter.
                 mMainHandler.post(() -> {
                     AiMessage errorMsg = new AiMessage("assistant",
                             "Could not connect to Ollama: " + e.getMessage() +
-                                    "\nCheck your Ollama IP and Port in Settings.");
+                                    "\nCheck your Ollama endpoint and model in Build AI Settings.");
                     mAdapter.addMessage(errorMsg);
                     scrollToBottom();
                     saveChatHistory();
@@ -281,10 +354,10 @@ public class BuildAiActivity extends AppCompatActivity implements AiChatAdapter.
             }
         }
 
-        // Step 2: Check for Action blocks (CREATE FILE, WRITE FILE, RENAME FILE, DELETE FILE)
+        // Step 2: Check for Action blocks
         boolean hasAction = false;
 
-        // CREATE FILE pattern
+        // CREATE FILE
         Pattern createPat = Pattern.compile("\\[CREATE FILE:\\s*([^\\]]+)\\]([\\s\\S]*?)\\[/CREATE FILE\\]");
         Matcher mCreate = createPat.matcher(rawText);
         while (mCreate.find()) {
@@ -299,7 +372,7 @@ public class BuildAiActivity extends AppCompatActivity implements AiChatAdapter.
             mAdapter.addMessage(msg);
         }
 
-        // WRITE FILE pattern
+        // WRITE FILE
         Pattern writePat = Pattern.compile("\\[WRITE FILE:\\s*([^\\]]+)\\]([\\s\\S]*?)\\[/WRITE FILE\\]");
         Matcher mWrite = writePat.matcher(rawText);
         while (mWrite.find()) {
@@ -314,7 +387,7 @@ public class BuildAiActivity extends AppCompatActivity implements AiChatAdapter.
             mAdapter.addMessage(msg);
         }
 
-        // RENAME FILE pattern
+        // RENAME FILE
         Pattern renamePat = Pattern.compile("\\[RENAME FILE:\\s*([^-]+)->\\s*([^\\]]+)\\]");
         Matcher mRename = renamePat.matcher(rawText);
         while (mRename.find()) {
@@ -329,7 +402,7 @@ public class BuildAiActivity extends AppCompatActivity implements AiChatAdapter.
             mAdapter.addMessage(msg);
         }
 
-        // DELETE FILE pattern
+        // DELETE FILE
         Pattern deletePat = Pattern.compile("\\[DELETE FILE:\\s*([^\\]]+)\\]");
         Matcher mDelete = deletePat.matcher(rawText);
         while (mDelete.find()) {
@@ -342,7 +415,6 @@ public class BuildAiActivity extends AppCompatActivity implements AiChatAdapter.
             mAdapter.addMessage(msg);
         }
 
-        // If neither plan nor actions found, display as standard text
         if (planText == null && !hasAction) {
             AiMessage plainMsg = new AiMessage("assistant", rawText);
             mAdapter.addMessage(plainMsg);
@@ -373,6 +445,9 @@ public class BuildAiActivity extends AppCompatActivity implements AiChatAdapter.
         }
 
         try {
+            // 1. Take snapshot backup before applying modification
+            BackupManager.createSnapshot(mProjectRoot, "AI " + message.getActionType() + " " + message.getTargetFilePath());
+
             ActionType type = message.getActionType();
             String relPath = message.getTargetFilePath();
             File targetFile = new File(mProjectRoot, relPath);
@@ -414,6 +489,29 @@ public class BuildAiActivity extends AppCompatActivity implements AiChatAdapter.
         mAdapter.notifyItemChanged(position);
         saveChatHistory();
         Toast.makeText(this, "Rejected changes", Toast.LENGTH_SHORT).show();
+    }
+
+    private void showUndoAiDialog() {
+        if (mProjectRoot == null) return;
+        List<File> snapshots = BackupManager.listSnapshots(mProjectRoot);
+        if (snapshots.isEmpty()) {
+            Toast.makeText(this, "No previous AI snapshots found", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle("Undo AI Changes?")
+                .setMessage("Restore project to the snapshot before the last AI modifications? (" + snapshots.get(0).getName() + ")")
+                .setPositiveButton("Restore", (dialog, which) -> {
+                    boolean restored = BackupManager.restoreLatestSnapshot(mProjectRoot);
+                    if (restored) {
+                        Toast.makeText(this, "Project restored to previous version!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, "Failed to restore snapshot", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private void scrollToBottom() {

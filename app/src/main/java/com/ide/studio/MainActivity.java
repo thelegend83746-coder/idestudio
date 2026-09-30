@@ -1,6 +1,8 @@
 package com.ide.studio;
 
 import android.Manifest;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -10,6 +12,7 @@ import android.os.Environment;
 import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -21,64 +24,153 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 import com.ide.studio.adapter.ProjectAdapter;
 import com.ide.studio.core.FileUtils;
+import com.ide.studio.core.PreferencesManager;
 import com.ide.studio.core.ProjectStorage;
 import com.ide.studio.model.Project;
 import java.io.File;
 import java.util.List;
 
 /**
- * Main launcher activity: displays the list of user projects,
- * allows creating new projects, and navigating to settings or the IDE editor.
+ * Main launcher activity: displays the BUILD STUDIO projects dashboard,
+ * provides animated "Create Project" action, project options (Open, Export, Delete),
+ * and access to IDE Settings.
  */
 public class MainActivity extends AppCompatActivity implements ProjectAdapter.OnProjectClickListener {
 
     private static final int PERMISSION_REQ_CODE = 1001;
 
+    private View mRootView;
     private MaterialToolbar mToolbar;
     private RecyclerView mRecyclerProjects;
-    private TextView mTvEmpty;
+    private LinearLayout mLayoutEmptyState;
     private FloatingActionButton mFabNewProject;
+    private LinearLayout mBtnCreateProjectAction;
+    private boolean mIsFabActionOpen = false;
+
     private ProjectAdapter mAdapter;
     private ProjectStorage mProjectStorage;
+    private PreferencesManager mPrefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mPrefs = new PreferencesManager(this);
         mProjectStorage = new ProjectStorage(this);
 
+        initViews();
+        setupToolbar();
+        setupFabInteraction();
+        checkAndRequestStoragePermissions();
+    }
+
+    private void initViews() {
+        mRootView = findViewById(R.id.coordinator_main);
         mToolbar = findViewById(R.id.toolbar);
         mRecyclerProjects = findViewById(R.id.recycler_projects);
-        mTvEmpty = findViewById(R.id.tv_empty);
+        mLayoutEmptyState = findViewById(R.id.layout_empty_state);
         mFabNewProject = findViewById(R.id.fab_new_project);
+        mBtnCreateProjectAction = findViewById(R.id.btn_create_project_action);
 
+        mRecyclerProjects.setLayoutManager(new LinearLayoutManager(this));
+        mAdapter = new ProjectAdapter(this, this);
+        mRecyclerProjects.setAdapter(mAdapter);
+    }
+
+    private void setupToolbar() {
         mToolbar.inflateMenu(R.menu.menu_main);
         mToolbar.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == R.id.action_settings) {
                 startActivity(new Intent(MainActivity.this, SettingsActivity.class));
                 return true;
+            } else if (item.getItemId() == R.id.action_about) {
+                startActivity(new Intent(MainActivity.this, AboutPageActivity.class));
+                return true;
             }
             return false;
         });
+    }
 
-        mRecyclerProjects.setLayoutManager(new LinearLayoutManager(this));
-        mAdapter = new ProjectAdapter(this, this);
-        mRecyclerProjects.setAdapter(mAdapter);
+    private void setupFabInteraction() {
+        mFabNewProject.setOnClickListener(v -> toggleCreateAction());
 
-        mFabNewProject.setOnClickListener(v -> {
+        mBtnCreateProjectAction.setOnClickListener(v -> {
+            hideCreateAction();
             Intent intent = new Intent(MainActivity.this, CreateProjectActivity.class);
             startActivity(intent);
         });
 
-        checkAndRequestStoragePermissions();
+        // Tap on coordinator background closes the action if open
+        mRootView.setOnClickListener(v -> {
+            if (mIsFabActionOpen) {
+                hideCreateAction();
+            }
+        });
+    }
+
+    private void toggleCreateAction() {
+        if (mIsFabActionOpen) {
+            hideCreateAction();
+        } else {
+            showCreateAction();
+        }
+    }
+
+    private void showCreateAction() {
+        mIsFabActionOpen = true;
+        mBtnCreateProjectAction.setVisibility(View.VISIBLE);
+        mBtnCreateProjectAction.setAlpha(0f);
+        mBtnCreateProjectAction.setScaleX(0.7f);
+        mBtnCreateProjectAction.setScaleY(0.7f);
+        mBtnCreateProjectAction.setTranslationY(20f * getResources().getDisplayMetrics().density);
+
+        mBtnCreateProjectAction.animate()
+                .alpha(1f)
+                .scaleX(1f)
+                .scaleY(1f)
+                .translationY(0f)
+                .setDuration(180)
+                .setListener(null)
+                .start();
+
+        mFabNewProject.animate()
+                .rotation(45f)
+                .setDuration(180)
+                .start();
+    }
+
+    private void hideCreateAction() {
+        mIsFabActionOpen = false;
+        mBtnCreateProjectAction.animate()
+                .alpha(0f)
+                .scaleX(0.7f)
+                .scaleY(0.7f)
+                .translationY(20f * getResources().getDisplayMetrics().density)
+                .setDuration(150)
+                .setListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        mBtnCreateProjectAction.setVisibility(View.GONE);
+                    }
+                })
+                .start();
+
+        mFabNewProject.animate()
+                .rotation(0f)
+                .setDuration(150)
+                .start();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        if (mIsFabActionOpen) {
+            hideCreateAction();
+        }
         loadProjects();
     }
 
@@ -109,10 +201,10 @@ public class MainActivity extends AppCompatActivity implements ProjectAdapter.On
         mAdapter.setProjects(projects);
 
         if (projects.isEmpty()) {
-            mTvEmpty.setVisibility(View.VISIBLE);
+            mLayoutEmptyState.setVisibility(View.VISIBLE);
             mRecyclerProjects.setVisibility(View.GONE);
         } else {
-            mTvEmpty.setVisibility(View.GONE);
+            mLayoutEmptyState.setVisibility(View.GONE);
             mRecyclerProjects.setVisibility(View.VISIBLE);
         }
     }
@@ -158,34 +250,55 @@ public class MainActivity extends AppCompatActivity implements ProjectAdapter.On
 
         btnDelete.setOnClickListener(v -> {
             dialog.dismiss();
-            confirmDeleteProject(project);
+            handleDeleteProject(project);
         });
 
         dialog.show();
     }
 
     private void exportProject(Project project) {
-        File exportDir = new File(Environment.getExternalStorageDirectory(), "test-folder/exports");
+        File exportDir = ProjectStorage.getExportsRoot();
         exportDir.mkdirs();
         File zipFile = new File(exportDir, project.getName() + ".zip");
         boolean success = FileUtils.zipDirectory(project.getRootDirectory(), zipFile);
         if (success) {
-            Toast.makeText(this, "Exported to: " + zipFile.getAbsolutePath(), Toast.LENGTH_LONG).show();
+            Snackbar.make(mRootView, "Exported to: " + zipFile.getName(), Snackbar.LENGTH_LONG).show();
         } else {
-            Toast.makeText(this, "Export failed", Toast.LENGTH_SHORT).show();
+            Snackbar.make(mRootView, "Export failed", Snackbar.LENGTH_SHORT).show();
         }
     }
 
-    private void confirmDeleteProject(Project project) {
-        new AlertDialog.Builder(this)
-                .setTitle("Delete Project")
-                .setMessage("Are you sure you want to delete '" + project.getName() + "'? This action cannot be undone.")
-                .setPositiveButton("Delete", (dialog, which) -> {
-                    mProjectStorage.deleteProject(project);
-                    loadProjects();
-                    Toast.makeText(this, "Project deleted", Toast.LENGTH_SHORT).show();
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+    private void handleDeleteProject(Project project) {
+        if (mPrefs.isConfirmBeforeDelete()) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Delete Project?")
+                    .setMessage("Are you sure you want to delete '" + project.getName() + "'? This action cannot be undone.")
+                    .setPositiveButton("Delete", (dialog, which) -> {
+                        executeDelete(project);
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        } else {
+            executeDelete(project);
+        }
+    }
+
+    private void executeDelete(Project project) {
+        boolean deleted = mProjectStorage.deleteProject(project);
+        if (deleted) {
+            loadProjects();
+            Snackbar.make(mRootView, "Project deleted", Snackbar.LENGTH_SHORT).show();
+        } else {
+            Snackbar.make(mRootView, "Failed to delete project", Snackbar.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (mIsFabActionOpen) {
+            hideCreateAction();
+        } else {
+            super.onBackPressed();
+        }
     }
 }

@@ -88,4 +88,19 @@ public class PreferencesManager {
 
     public boolean isWordWrap() { return prefs.getBoolean("word_wrap", false); }
     public void setWordWrap(boolean value) { prefs.edit().putBoolean("word_wrap", value).apply(); }
+
+    public boolean isHighlightCurrentLine() { return prefs.getBoolean("highlight_current_line", true); }
+    public void setHighlightCurrentLine(boolean value) { prefs.edit().putBoolean("highlight_current_line", value).apply(); }
+
+    public boolean isAutoCompleteEnabled() { return prefs.getBoolean("auto_complete", true); }
+    public void setAutoCompleteEnabled(boolean value) { prefs.edit().putBoolean("auto_complete", value).apply(); }
+
+    public boolean isDarkEditorTheme() { return prefs.getBoolean("dark_editor_theme", true); }
+    public void setDarkEditorTheme(boolean value) { prefs.edit().putBoolean("dark_editor_theme", value).apply(); }
+
+    public boolean isConfirmBeforeBuild() { return prefs.getBoolean("confirm_build", false); }
+    public void setConfirmBeforeBuild(boolean value) { prefs.edit().putBoolean("confirm_build", value).apply(); }
+
+    public String getSystemPrompt() { return prefs.getString(KEY_SYSTEM_PROMPT, DEFAULT_SYSTEM_PROMPT); }
+    public void setSystemPrompt(String value) { prefs.edit().putString(KEY_SYSTEM_PROMPT, value).apply(); }
 }

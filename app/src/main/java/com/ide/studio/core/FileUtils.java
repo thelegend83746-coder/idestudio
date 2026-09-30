@@ -87,4 +87,34 @@ public class FileUtils {
             zos.closeEntry();
         }
     }
+
+    public static void copyFile(File src, File dest) throws IOException {
+        if (dest.getParentFile() != null) {
+            dest.getParentFile().mkdirs();
+        }
+        try (InputStream in = new FileInputStream(src);
+             OutputStream out = new FileOutputStream(dest)) {
+            byte[] buf = new byte[8192];
+            int len;
+            while ((len = in.read(buf)) > 0) {
+                out.write(buf, 0, len);
+            }
+        }
+    }
+
+    public static void copyDirectory(File srcDir, File destDir) throws IOException {
+        if (srcDir.isDirectory()) {
+            if (!destDir.exists()) {
+                destDir.mkdirs();
+            }
+            String[] children = srcDir.list();
+            if (children != null) {
+                for (String child : children) {
+                    copyDirectory(new File(srcDir, child), new File(destDir, child));
+                }
+            }
+        } else {
+            copyFile(srcDir, destDir);
+        }
+    }
 }

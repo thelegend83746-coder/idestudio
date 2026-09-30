@@ -332,4 +332,45 @@ public class SmoothCodeEditor extends AppCompatEditText {
             isUndoOrRedo = false;
         }
     }
+
+    public void insertText(String text) {
+        int start = Math.max(0, getSelectionStart());
+        int end = Math.max(0, getSelectionEnd());
+        getText().replace(Math.min(start, end), Math.max(start, end), text, 0, text.length());
+    }
+
+    public void insertTab(int spaces) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < spaces; i++) {
+            sb.append(" ");
+        }
+        insertText(sb.toString());
+    }
+
+    public String getCurrentWordPrefix() {
+        int cursor = getSelectionStart();
+        if (cursor <= 0) return "";
+        CharSequence text = getText();
+        int start = cursor - 1;
+        while (start >= 0 && Character.isJavaIdentifierPart(text.charAt(start))) {
+            start--;
+        }
+        start++;
+        if (start < cursor) {
+            return text.subSequence(start, cursor).toString();
+        }
+        return "";
+    }
+
+    public void replaceCurrentWord(String replacement) {
+        int cursor = getSelectionStart();
+        if (cursor < 0) return;
+        CharSequence text = getText();
+        int start = cursor - 1;
+        while (start >= 0 && Character.isJavaIdentifierPart(text.charAt(start))) {
+            start--;
+        }
+        start++;
+        getText().replace(start, cursor, replacement);
+    }
 }

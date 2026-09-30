@@ -116,6 +116,26 @@ public class ToolchainValidator {
         return new ValidationResult(errors.isEmpty(), errors);
     }
 
+    public static boolean isSdkAvailable(Context context, int targetSdk) {
+        File platformsDir = new File(context.getFilesDir(), "platforms/android-" + targetSdk);
+        File androidJar = new File(platformsDir, "android.jar");
+        if (androidJar.exists()) return true;
+        try (InputStream is = context.getAssets().open("platforms/android-" + targetSdk + "/android.jar")) {
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public static String getSdkStatus(Context context, int targetSdk) {
+        if (isSdkAvailable(context, targetSdk)) {
+            return "Installed & Ready (API " + targetSdk + ")";
+        } else {
+            return "SDK not installed / unavailable";
+        }
+    }
+
+
     private static boolean hasJavaFiles(File dir) {
         File[] files = dir.listFiles();
         if (files == null) return false;

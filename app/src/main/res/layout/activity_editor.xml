@@ -150,6 +150,28 @@
                 android:padding="12dp"
                 android:scrollbars="vertical|horizontal" />
 
+            <!-- Symbol & Autocomplete Accessory Bar -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/border_light" />
+
+            <HorizontalScrollView
+                android:id="@+id/scroll_symbol_bar"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:background="@color/surface_light"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/layout_symbol_bar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="6dp" />
+            </HorizontalScrollView>
+
         </LinearLayout>
 
         <!-- Floating "Save File" Pill Button -->
