@@ -57,6 +57,11 @@ public class AiChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         notifyItemInserted(mMessages.size() - 1);
     }
 
+    public void clearMessages() {
+        mMessages.clear();
+        notifyDataSetChanged();
+    }
+
     public List<AiMessage> getMessages() {
         return mMessages;
     }
