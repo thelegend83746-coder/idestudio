@@ -1,5 +1,7 @@
 package com.idestudio.app.data.models;
 
+import org.json.JSONObject;
+
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -8,15 +10,15 @@ public class ProjectMeta implements Serializable {
     private String name;
     private String packageName;
     private String projectPath;
-    private int minSdk;
-    private int targetSdk;
+    private int minSdk = 21;
+    private int targetSdk = 34;
     private long createdAt;
     private long lastModified;
-    private String templateName;
-    private String language; // Always "Java"
+    private String templateName = "Empty Activity";
+    private String language = "Java";
 
     public ProjectMeta() {
-        this.id = UUID.randomUUID().toString();
+        this.id = "proj_" + UUID.randomUUID().toString();
         this.createdAt = System.currentTimeMillis();
         this.lastModified = System.currentTimeMillis();
         this.language = "Java";
@@ -30,6 +32,39 @@ public class ProjectMeta implements Serializable {
         this.minSdk = minSdk;
         this.targetSdk = targetSdk;
         this.templateName = templateName;
+    }
+
+    public JSONObject toJson() {
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put("id", id);
+            obj.put("name", name);
+            obj.put("packageName", packageName);
+            obj.put("projectPath", projectPath);
+            obj.put("minSdk", minSdk);
+            obj.put("targetSdk", targetSdk);
+            obj.put("createdAt", createdAt);
+            obj.put("lastModified", lastModified);
+            obj.put("templateName", templateName);
+            obj.put("language", language);
+        } catch (Exception ignored) {}
+        return obj;
+    }
+
+    public static ProjectMeta fromJson(JSONObject obj) {
+        if (obj == null) return null;
+        ProjectMeta meta = new ProjectMeta();
+        meta.setId(obj.optString("id", meta.getId()));
+        meta.setName(obj.optString("name", ""));
+        meta.setPackageName(obj.optString("packageName", ""));
+        meta.setProjectPath(obj.optString("projectPath", ""));
+        meta.setMinSdk(obj.optInt("minSdk", 21));
+        meta.setTargetSdk(obj.optInt("targetSdk", 34));
+        meta.setCreatedAt(obj.optLong("createdAt", System.currentTimeMillis()));
+        meta.setLastModified(obj.optLong("lastModified", System.currentTimeMillis()));
+        meta.setTemplateName(obj.optString("templateName", "Empty Activity"));
+        meta.setLanguage(obj.optString("language", "Java"));
+        return meta;
     }
 
     public String getId() {
@@ -72,11 +107,27 @@ public class ProjectMeta implements Serializable {
         this.minSdk = minSdk;
     }
 
+    public int getMinSdkVersion() {
+        return minSdk;
+    }
+
+    public void setMinSdkVersion(int minSdk) {
+        this.minSdk = minSdk;
+    }
+
     public int getTargetSdk() {
         return targetSdk;
     }
 
     public void setTargetSdk(int targetSdk) {
+        this.targetSdk = targetSdk;
+    }
+
+    public int getTargetSdkVersion() {
+        return targetSdk;
+    }
+
+    public void setTargetSdkVersion(int targetSdk) {
         this.targetSdk = targetSdk;
     }
 
@@ -102,6 +153,14 @@ public class ProjectMeta implements Serializable {
 
     public void setTemplateName(String templateName) {
         this.templateName = templateName;
+    }
+
+    public String getTemplateType() {
+        return templateName;
+    }
+
+    public void setTemplateType(String templateType) {
+        this.templateName = templateType;
     }
 
     public String getLanguage() {

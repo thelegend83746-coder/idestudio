@@ -1,5 +1,7 @@
 package com.idestudio.app.domain.project;
 
+import com.idestudio.app.data.models.ProjectMeta;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

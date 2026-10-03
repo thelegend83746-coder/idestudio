@@ -11,17 +11,27 @@ public class ChatMessage implements Serializable {
 
     private final String id;
     private final boolean isUser;
+    private final String role;
     private final String text;
     private final long timestamp;
     private final List<AIProposal> proposals;
 
     public ChatMessage(boolean isUser, String text) {
-        this(isUser, text, new ArrayList<>());
+        this(isUser ? "user" : "assistant", text);
+    }
+
+    public ChatMessage(String role, String text) {
+        this(role, text, new ArrayList<>());
     }
 
     public ChatMessage(boolean isUser, String text, List<AIProposal> proposals) {
+        this(isUser ? "user" : "assistant", text, proposals);
+    }
+
+    public ChatMessage(String role, String text, List<AIProposal> proposals) {
         this.id = UUID.randomUUID().toString();
-        this.isUser = isUser;
+        this.role = role != null ? role : "user";
+        this.isUser = "user".equalsIgnoreCase(this.role);
         this.text = text;
         this.timestamp = System.currentTimeMillis();
         this.proposals = proposals != null ? proposals : new ArrayList<>();
@@ -35,7 +45,15 @@ public class ChatMessage implements Serializable {
         return isUser;
     }
 
+    public String getRole() {
+        return role;
+    }
+
     public String getText() {
+        return text;
+    }
+
+    public String getContent() {
         return text;
     }
 

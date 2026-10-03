@@ -33,6 +33,17 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<ChatMessageAdapter.
     private final File projectRoot;
     private final ProposalApprovalListener listener;
 
+    public ChatMessageAdapter() {
+        this(null, null);
+    }
+
+    public ChatMessageAdapter(List<ChatMessage> list) {
+        this(null, null);
+        if (list != null) {
+            messages.addAll(list);
+        }
+    }
+
     public ChatMessageAdapter(File projectRoot, ProposalApprovalListener listener) {
         this.projectRoot = projectRoot;
         this.listener = listener;
@@ -131,10 +142,12 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<ChatMessageAdapter.
 
             btnApprove.setOnClickListener(v -> {
                 try {
-                    ApprovalManager.applyProposal(projectRoot, proposal);
-                    updateStatusUi(proposal, tvStatus, layoutButtons);
-                    Toast.makeText(context, "Approved & Applied: " + proposal.getTargetPath(), Toast.LENGTH_SHORT).show();
-                    if (listener != null) listener.onProposalApproved(proposal);
+                    if (projectRoot != null) {
+                        ApprovalManager.applyProposal(projectRoot, proposal);
+                        updateStatusUi(proposal, tvStatus, layoutButtons);
+                        Toast.makeText(context, "Approved & Applied: " + proposal.getTargetPath(), Toast.LENGTH_SHORT).show();
+                        if (listener != null) listener.onProposalApproved(proposal);
+                    }
                 } catch (Exception e) {
                     Toast.makeText(context, "Approval Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 }

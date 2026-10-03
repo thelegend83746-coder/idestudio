@@ -27,7 +27,7 @@ import androidx.core.content.ContextCompat;
 
 import com.idestudio.app.R;
 import com.idestudio.app.domain.project.LocalProjectStore;
-import com.idestudio.app.domain.project.ProjectMeta;
+import com.idestudio.app.data.models.ProjectMeta;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -152,7 +152,7 @@ public class EditProjectActivity extends AppCompatActivity {
             imgAppIcon.setImageURI(Uri.fromFile(iconFile));
             tvIconHint.setText("Custom Project Icon");
         } else {
-            imgAppIcon.setImageResource(R.mipmap.ic_launcher);
+            imgAppIcon.setImageResource(R.drawable.ic_launcher);
             tvIconHint.setText("Default Launcher Icon");
         }
     }
@@ -228,7 +228,7 @@ public class EditProjectActivity extends AppCompatActivity {
                 R.drawable.ic_preset_game,
                 R.drawable.ic_preset_code,
                 R.drawable.ic_preset_rocket,
-                R.mipmap.ic_launcher
+                R.drawable.ic_launcher
         };
 
         new AlertDialog.Builder(this)

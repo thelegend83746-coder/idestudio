@@ -1,5 +1,7 @@
 package com.idestudio.app.domain.project;
 
+import com.idestudio.app.data.models.ProjectMeta;
+
 import android.os.Environment;
 import android.util.Log;
 

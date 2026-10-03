@@ -2,21 +2,18 @@ package com.idestudio.app.ui.ai;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.idestudio.app.R;
 import com.idestudio.app.ai.client.OllamaCloudClient;
 import com.idestudio.app.data.models.ChatMessage;
@@ -33,8 +30,9 @@ public class AIChatActivity extends AppCompatActivity {
     private RecyclerView rvChat;
     private ChatMessageAdapter adapter;
     private EditText etInput;
-    private ImageButton btnSend;
+    private FloatingActionButton btnSend;
     private ProgressBar pbLoading;
+    private TextView tvActiveModel;
 
     private final List<ChatMessage> messageList = new ArrayList<>();
     private OllamaCloudClient aiClient;
@@ -51,18 +49,21 @@ public class AIChatActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        Toolbar toolbar = findViewById(R.id.toolbar_ai_chat);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("Build AI Assistant");
+        View btnBack = findViewById(R.id.btn_back_ai);
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
         }
-        toolbar.setNavigationOnClickListener(v -> finish());
 
-        rvChat = findViewById(R.id.rv_chat_messages);
+        tvActiveModel = findViewById(R.id.tv_active_model_tag);
+        if (tvActiveModel != null) {
+            tvActiveModel.setText(aiClient.getModel());
+            tvActiveModel.setOnClickListener(v -> startActivity(new Intent(this, SettingsActivity.class)));
+        }
+
+        rvChat = findViewById(R.id.recycler_chat_messages);
         etInput = findViewById(R.id.et_chat_input);
-        btnSend = findViewById(R.id.btn_chat_send);
-        pbLoading = findViewById(R.id.pb_chat_loading);
+        btnSend = findViewById(R.id.btn_send_chat);
+        pbLoading = findViewById(R.id.progress_ai_generating);
 
         adapter = new ChatMessageAdapter(messageList);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
@@ -108,7 +109,7 @@ public class AIChatActivity extends AppCompatActivity {
             @Override
             public void onError(String errorMessage) {
                 setInputEnabled(true);
-                ChatMessage errorMsg = new ChatMessage("assistant", "⚠️ Error: " + errorMessage + "\n\nTap the ⚙ icon at top right to check your API Key and server URL in Settings.");
+                ChatMessage errorMsg = new ChatMessage("assistant", "⚠️ Error: " + errorMessage + "\n\nTap the model badge at top right to check your API Key and server URL in Settings.");
                 messageList.add(errorMsg);
                 adapter.notifyItemInserted(messageList.size() - 1);
                 rvChat.smoothScrollToPosition(messageList.size() - 1);
@@ -122,22 +123,5 @@ public class AIChatActivity extends AppCompatActivity {
         if (pbLoading != null) {
             pbLoading.setVisibility(enabled ? View.GONE : View.VISIBLE);
         }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(0, 1, 0, "Settings")
-                .setIcon(android.R.drawable.ic_menu_preferences)
-                .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == 1) {
-            startActivity(new Intent(this, SettingsActivity.class));
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 }

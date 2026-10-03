@@ -5,11 +5,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,12 +19,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.idestudio.app.R;
+import com.idestudio.app.data.models.ProjectMeta;
 import com.idestudio.app.domain.project.LocalProjectStore;
 import com.idestudio.app.domain.project.ProjectExporter;
-import com.idestudio.app.domain.project.ProjectMeta;
 import com.idestudio.app.ui.create.ConfigureProjectActivity;
 import com.idestudio.app.ui.create.EditProjectActivity;
 import com.idestudio.app.ui.editor.EditorActivity;
+import com.idestudio.app.ui.settings.SettingsActivity;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -38,14 +36,13 @@ import java.util.List;
  * Supports quick search, opening editor, editing project details,
  * and exporting .zip backups.
  */
-public class HomeActivity extends AppCompatActivity implements ProjectListAdapter.OnProjectClickListener {
+public class HomeActivity extends AppCompatActivity implements ProjectAdapter.OnProjectInteractionListener {
 
     private static final int RC_EDIT_PROJECT = 2001;
 
     private RecyclerView rvProjects;
-    private ProjectListAdapter adapter;
+    private ProjectAdapter adapter;
     private View emptyStateLayout;
-    private EditText etSearch;
     private FloatingActionButton fabNewProject;
 
     private List<ProjectMeta> allProjects = new ArrayList<>();
@@ -66,12 +63,11 @@ public class HomeActivity extends AppCompatActivity implements ProjectListAdapte
     }
 
     private void initViews() {
-        rvProjects = findViewById(R.id.rv_projects);
+        rvProjects = findViewById(R.id.recycler_projects);
         emptyStateLayout = findViewById(R.id.layout_empty_state);
-        etSearch = findViewById(R.id.et_search_projects);
-        fabNewProject = findViewById(R.id.fab_new_project);
+        fabNewProject = findViewById(R.id.fab_add);
 
-        adapter = new ProjectListAdapter(this);
+        adapter = new ProjectAdapter(this);
         rvProjects.setLayoutManager(new LinearLayoutManager(this));
         rvProjects.setAdapter(adapter);
 
@@ -80,19 +76,9 @@ public class HomeActivity extends AppCompatActivity implements ProjectListAdapte
             startActivity(intent);
         });
 
-        if (etSearch != null) {
-            etSearch.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    filterProjects(s.toString());
-                }
-
-                @Override
-                public void afterTextChanged(Editable s) {}
-            });
+        View btnSettings = findViewById(R.id.btn_settings);
+        if (btnSettings != null) {
+            btnSettings.setOnClickListener(v -> startActivity(new Intent(this, SettingsActivity.class)));
         }
     }
 
@@ -106,22 +92,6 @@ public class HomeActivity extends AppCompatActivity implements ProjectListAdapte
             emptyStateLayout.setVisibility(View.GONE);
             adapter.setProjects(allProjects);
         }
-    }
-
-    private void filterProjects(String query) {
-        if (query == null || query.trim().isEmpty()) {
-            adapter.setProjects(allProjects);
-            return;
-        }
-
-        String lower = query.toLowerCase().trim();
-        List<ProjectMeta> filtered = new ArrayList<>();
-        for (ProjectMeta p : allProjects) {
-            if (p.getName().toLowerCase().contains(lower) || p.getPackageName().toLowerCase().contains(lower)) {
-                filtered.add(p);
-            }
-        }
-        adapter.setProjects(filtered);
     }
 
     @Override

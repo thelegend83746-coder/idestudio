@@ -25,25 +25,19 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.idestudio.app.R;
+import com.idestudio.app.data.models.ProjectMeta;
 import com.idestudio.app.domain.project.ProjectExporter;
-import com.idestudio.app.domain.project.ProjectMeta;
 import com.idestudio.app.editor.engine.JavaSyntaxHighlighter;
 import com.idestudio.app.editor.tabs.EditorTabAdapter;
+import com.idestudio.app.editor.tabs.OpenFileDocument;
 import com.idestudio.app.ui.ai.AIChatActivity;
 import com.idestudio.app.ui.explorer.ProjectExplorerManager;
 import com.idestudio.app.ui.settings.SettingsActivity;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Pro Premium Code Editor Activity with:
@@ -106,9 +100,8 @@ public class EditorActivity extends AppCompatActivity {
     // State
     private String projectName;
     private String projectPath;
-    private File activeFile;
-    private final List<File> openFiles = new ArrayList<>();
-    private final Map<String, String> fileCache = new HashMap<>();
+    private OpenFileDocument activeDocument;
+    private final List<OpenFileDocument> openTabs = new ArrayList<>();
 
     private final Handler syntaxHandler = new Handler(Looper.getMainLooper());
     private Runnable syntaxRunnable;
@@ -200,15 +193,19 @@ public class EditorActivity extends AppCompatActivity {
         undoRedoManager = new EditorUndoRedoManager(etCodeEditor);
 
         // 4. Tab Adapter
-        tabAdapter = new EditorTabAdapter(new EditorTabAdapter.TabActionListener() {
+        tabAdapter = new EditorTabAdapter(new EditorTabAdapter.OnTabInteractionListener() {
             @Override
-            public void onTabSelected(File file) {
-                openFile(file);
+            public void onTabSelected(int index) {
+                if (index >= 0 && index < openTabs.size()) {
+                    selectDocument(openTabs.get(index));
+                }
             }
 
             @Override
-            public void onTabClosed(File file) {
-                closeFile(file);
+            public void onTabClosed(int index) {
+                if (index >= 0 && index < openTabs.size()) {
+                    closeDocument(openTabs.get(index));
+                }
             }
         });
         rvTabs.setAdapter(tabAdapter);
@@ -256,7 +253,11 @@ public class EditorActivity extends AppCompatActivity {
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (activeDocument != null) {
+                    activeDocument.setDirty(true);
+                }
+            }
 
             @Override
             public void afterTextChanged(Editable s) {
@@ -266,12 +267,12 @@ public class EditorActivity extends AppCompatActivity {
     }
 
     private void scheduleSyntaxHighlight() {
-        if (activeFile == null) return;
+        if (activeDocument == null) return;
         if (syntaxRunnable != null) {
             syntaxHandler.removeCallbacks(syntaxRunnable);
         }
         syntaxRunnable = () -> {
-            String ext = getFileExtension(activeFile.getName());
+            String ext = getFileExtension(activeDocument.getFileName());
             JavaSyntaxHighlighter.highlight(etCodeEditor.getText(), ext);
         };
         syntaxHandler.postDelayed(syntaxRunnable, 300); // 300ms debounce
@@ -281,10 +282,13 @@ public class EditorActivity extends AppCompatActivity {
         View drawerView = findViewById(R.id.drawer_layout_editor);
         File rootDir = new File(projectPath);
 
-        explorerManager = new ProjectExplorerManager(this, drawerView, rootDir, file -> {
-            openFile(file);
-            drawerLayout.closeDrawer(GravityCompat.START);
-        });
+        explorerManager = new ProjectExplorerManager(
+                this,
+                rootDir,
+                drawerView,
+                file -> openFile(file),
+                () -> drawerLayout.closeDrawer(GravityCompat.START)
+        );
     }
 
     private void openDefaultFile() {
@@ -303,73 +307,81 @@ public class EditorActivity extends AppCompatActivity {
     public void openFile(File file) {
         if (file == null || !file.exists() || file.isDirectory()) return;
 
-        // Cache active file edits before switching
-        if (activeFile != null) {
-            fileCache.put(activeFile.getAbsolutePath(), etCodeEditor.getText().toString());
+        // Check if already open
+        for (OpenFileDocument doc : openTabs) {
+            if (doc.getFile().getAbsolutePath().equals(file.getAbsolutePath())) {
+                selectDocument(doc);
+                return;
+            }
         }
 
-        if (!openFiles.contains(file)) {
-            openFiles.add(file);
+        OpenFileDocument newDoc = new OpenFileDocument(file);
+        openTabs.add(newDoc);
+        selectDocument(newDoc);
+    }
+
+    private void selectDocument(OpenFileDocument doc) {
+        if (doc == null) return;
+
+        // Save active document buffer before switching
+        if (activeDocument != null) {
+            activeDocument.setContent(etCodeEditor.getText().toString());
         }
 
-        activeFile = file;
-        tvToolbarFile.setText(file.getName());
+        activeDocument = doc;
+        tvToolbarFile.setText(doc.getFileName());
 
-        String content = fileCache.get(file.getAbsolutePath());
-        if (content == null) {
-            content = readFile(file);
-            fileCache.put(file.getAbsolutePath(), content);
-        }
-
-        etCodeEditor.setText(content);
+        etCodeEditor.setText(doc.getContent());
         etCodeEditor.setVisibility(View.VISIBLE);
         tvEmptyEditor.setVisibility(View.GONE);
 
-        String ext = getFileExtension(file.getName());
+        String ext = getFileExtension(doc.getFileName());
         tvStatusLang.setText(ext.toUpperCase());
         JavaSyntaxHighlighter.highlight(etCodeEditor.getText(), ext);
 
-        tabAdapter.setTabs(openFiles, activeFile);
+        int activeIdx = openTabs.indexOf(doc);
+        tabAdapter.setTabs(openTabs, activeIdx);
         proController.updateLineNumbersAndStatus();
         proController.updateCursorPosition();
     }
 
-    public void closeFile(File file) {
-        int index = openFiles.indexOf(file);
+    public void closeDocument(OpenFileDocument doc) {
+        int index = openTabs.indexOf(doc);
         if (index == -1) return;
 
-        openFiles.remove(file);
-        fileCache.remove(file.getAbsolutePath());
+        openTabs.remove(doc);
 
-        if (file.equals(activeFile)) {
-            if (!openFiles.isEmpty()) {
+        if (doc.equals(activeDocument)) {
+            if (!openTabs.isEmpty()) {
                 int nextIndex = Math.max(0, index - 1);
-                openFile(openFiles.get(nextIndex));
+                selectDocument(openTabs.get(nextIndex));
             } else {
-                activeFile = null;
+                activeDocument = null;
                 etCodeEditor.setText("");
                 etCodeEditor.setVisibility(View.GONE);
                 tvEmptyEditor.setVisibility(View.VISIBLE);
                 tvToolbarFile.setText("No file selected");
-                tabAdapter.setTabs(openFiles, null);
+                tabAdapter.setTabs(openTabs, -1);
             }
         } else {
-            tabAdapter.setTabs(openFiles, activeFile);
+            int activeIdx = openTabs.indexOf(activeDocument);
+            tabAdapter.setTabs(openTabs, activeIdx);
         }
     }
 
     private void saveCurrentFile() {
-        if (activeFile == null) {
+        if (activeDocument == null) {
             Toast.makeText(this, "No file open to save", Toast.LENGTH_SHORT).show();
             return;
         }
 
         String content = etCodeEditor.getText().toString();
         try {
-            writeFile(activeFile, content);
-            fileCache.put(activeFile.getAbsolutePath(), content);
-            Toast.makeText(this, "Saved: " + activeFile.getName(), Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
+            activeDocument.saveContent(content);
+            int activeIdx = openTabs.indexOf(activeDocument);
+            tabAdapter.setTabs(openTabs, activeIdx);
+            Toast.makeText(this, "Saved: " + activeDocument.getFileName(), Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
             Toast.makeText(this, "Failed to save: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
@@ -447,25 +459,5 @@ public class EditorActivity extends AppCompatActivity {
     private String getFileExtension(String name) {
         int idx = name.lastIndexOf('.');
         return idx != -1 ? name.substring(idx + 1) : "";
-    }
-
-    private String readFile(File file) {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line).append("\n");
-            }
-            return sb.toString();
-        } catch (Exception e) {
-            return "// Unable to read file: " + e.getMessage();
-        }
-    }
-
-    private void writeFile(File file, String content) throws Exception {
-        try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)) {
-            writer.write(content);
-            writer.flush();
-        }
     }
 }

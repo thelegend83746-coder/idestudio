@@ -1,5 +1,7 @@
 package com.idestudio.app.domain.project;
 
+import com.idestudio.app.data.models.ProjectMeta;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -236,7 +238,7 @@ public class ProjectGenerator {
             }
 
             if (bitmap == null && context != null) {
-                Drawable d = ContextCompat.getDrawable(context, R.mipmap.ic_launcher);
+                Drawable d = ContextCompat.getDrawable(context, R.drawable.ic_launcher);
                 if (d != null) {
                     bitmap = Bitmap.createBitmap(192, 192, Bitmap.Config.ARGB_8888);
                     Canvas canvas = new Canvas(bitmap);

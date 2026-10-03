@@ -198,7 +198,7 @@ public class ConfigureProjectActivity extends AppCompatActivity {
                 R.drawable.ic_preset_game,
                 R.drawable.ic_preset_code,
                 R.drawable.ic_preset_rocket,
-                R.mipmap.ic_launcher
+                R.drawable.ic_launcher
         };
 
         new AlertDialog.Builder(this)
