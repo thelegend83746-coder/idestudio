@@ -31,12 +31,19 @@
             </intent-filter>
         </activity>
 
+        <!-- Choose Template Screen -->
+        <activity
+            android:name=".ui.create.ChooseTemplateActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:parentActivityName=".ui.home.HomeActivity" />
+
         <!-- New Project Configuration Screen -->
         <activity
             android:name=".ui.create.ConfigureProjectActivity"
             android:exported="false"
             android:screenOrientation="portrait"
-            android:parentActivityName=".ui.home.HomeActivity" />
+            android:parentActivityName=".ui.create.ChooseTemplateActivity" />
 
         <!-- Edit Project Screen (App Icon, Name, Package, Min/Target SDK) -->
         <activity

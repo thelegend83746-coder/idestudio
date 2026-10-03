@@ -1,10 +1,15 @@
 package com.idestudio.app.ui.home;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
@@ -13,6 +18,8 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -22,6 +29,7 @@ import com.idestudio.app.R;
 import com.idestudio.app.data.models.ProjectMeta;
 import com.idestudio.app.domain.project.LocalProjectStore;
 import com.idestudio.app.domain.project.ProjectExporter;
+import com.idestudio.app.ui.create.ChooseTemplateActivity;
 import com.idestudio.app.ui.create.ConfigureProjectActivity;
 import com.idestudio.app.ui.create.EditProjectActivity;
 import com.idestudio.app.ui.editor.EditorActivity;
@@ -39,6 +47,7 @@ import java.util.List;
 public class HomeActivity extends AppCompatActivity implements ProjectAdapter.OnProjectInteractionListener {
 
     private static final int RC_EDIT_PROJECT = 2001;
+    private static final int RC_STORAGE_PERM = 1001;
 
     private RecyclerView rvProjects;
     private ProjectAdapter adapter;
@@ -46,6 +55,7 @@ public class HomeActivity extends AppCompatActivity implements ProjectAdapter.On
     private FloatingActionButton fabNewProject;
 
     private List<ProjectMeta> allProjects = new ArrayList<>();
+    private boolean permissionRequested = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -54,12 +64,46 @@ public class HomeActivity extends AppCompatActivity implements ProjectAdapter.On
 
         initViews();
         loadProjects();
+        checkStoragePermission();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         loadProjects();
+    }
+
+    private void checkStoragePermission() {
+        if (permissionRequested) return;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                permissionRequested = true;
+                new AlertDialog.Builder(this)
+                        .setTitle("Storage Permission Required")
+                        .setMessage("IDE Studio needs All Files Access to save and load projects in /storage/emulated/0/idestudio so you can easily access them.\n\nPlease allow access in the next screen.")
+                        .setPositiveButton("Grant Access", (d, w) -> {
+                            try {
+                                Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                                intent.setData(Uri.parse("package:" + getPackageName()));
+                                startActivity(intent);
+                            } catch (Exception e) {
+                                Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                                startActivity(intent);
+                            }
+                        })
+                        .setNegativeButton("Later", null)
+                        .show();
+            }
+        } else {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                permissionRequested = true;
+                ActivityCompat.requestPermissions(this, new String[]{
+                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                }, RC_STORAGE_PERM);
+            }
+        }
     }
 
     private void initViews() {
@@ -71,10 +115,21 @@ public class HomeActivity extends AppCompatActivity implements ProjectAdapter.On
         rvProjects.setLayoutManager(new LinearLayoutManager(this));
         rvProjects.setAdapter(adapter);
 
-        fabNewProject.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeActivity.this, ConfigureProjectActivity.class);
+        View.OnClickListener openChooseTemplate = v -> {
+            Intent intent = new Intent(HomeActivity.this, ChooseTemplateActivity.class);
             startActivity(intent);
-        });
+        };
+
+        fabNewProject.setOnClickListener(openChooseTemplate);
+
+        View btnCreateOption = findViewById(R.id.container_create_project_option);
+        if (btnCreateOption != null) {
+            btnCreateOption.setOnClickListener(openChooseTemplate);
+        }
+
+        if (emptyStateLayout != null) {
+            emptyStateLayout.setOnClickListener(openChooseTemplate);
+        }
 
         View btnSettings = findViewById(R.id.btn_settings);
         if (btnSettings != null) {

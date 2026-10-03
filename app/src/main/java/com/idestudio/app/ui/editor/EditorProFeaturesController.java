@@ -72,10 +72,24 @@ public class EditorProFeaturesController {
         this.etReplaceQuery = etReplaceQuery;
         this.tvSearchCount = tvSearchCount;
 
+        applyPreferences();
         setupSymbolBar();
         setupTextWatchers();
         setupCursorTracking();
         setupSearchReplaceListeners();
+    }
+
+    public void applyPreferences() {
+        android.content.SharedPreferences prefs = context.getSharedPreferences(com.idestudio.app.ui.settings.SettingsActivity.PREF_EDITOR, Context.MODE_PRIVATE);
+        boolean showLineNums = prefs.getBoolean(com.idestudio.app.ui.settings.SettingsActivity.KEY_LINE_NUMBERS, true);
+        boolean showSymbols = prefs.getBoolean(com.idestudio.app.ui.settings.SettingsActivity.KEY_SYMBOL_BAR, true);
+
+        if (lineNumbers != null) {
+            lineNumbers.setVisibility(showLineNums ? View.VISIBLE : View.GONE);
+        }
+        if (symbolsContainer != null) {
+            symbolsContainer.setVisibility(showSymbols ? View.VISIBLE : View.GONE);
+        }
     }
 
     private void setupSymbolBar() {

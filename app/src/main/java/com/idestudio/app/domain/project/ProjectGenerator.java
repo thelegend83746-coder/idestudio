@@ -4,6 +4,7 @@ import com.idestudio.app.data.models.ProjectMeta;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -16,6 +17,7 @@ import com.idestudio.app.R;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 
@@ -38,14 +40,26 @@ public class ProjectGenerator {
     ) throws Exception {
 
         File baseDir = LocalProjectStore.getResolvedBaseDir();
+        if (!baseDir.exists()) {
+            baseDir.mkdirs();
+        }
         File projectDir = new File(baseDir, projectName);
 
         if (projectDir.exists()) {
             throw new IllegalArgumentException("A project with name '" + projectName + "' already exists in " + baseDir.getAbsolutePath());
         }
 
-        if (!projectDir.mkdirs()) {
-            throw new Exception("Could not create project directory: " + projectDir.getAbsolutePath());
+        if (!projectDir.exists() && !projectDir.mkdirs()) {
+            if (com.idestudio.app.IDEStudioApp.getInstance() != null) {
+                File appStorage = new File(com.idestudio.app.IDEStudioApp.getInstance().getExternalFilesDir(null), "idestudio");
+                appStorage.mkdirs();
+                projectDir = new File(appStorage, projectName);
+                if (!projectDir.exists() && !projectDir.mkdirs()) {
+                    throw new Exception("Could not create project directory: " + projectDir.getAbsolutePath() + ". Please allow Storage permission.");
+                }
+            } else {
+                throw new Exception("Could not create project directory: " + projectDir.getAbsolutePath() + ". Please allow Storage permission.");
+            }
         }
 
         // Create standard Gradle Android directory hierarchy
@@ -149,57 +163,123 @@ public class ProjectGenerator {
                 "</resources>\n"
         );
 
-        // 6. res/layout/activity_main.xml
-        writeFile(new File(layoutDir, "activity_main.xml"),
-                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                "    android:layout_width=\"match_parent\"\n" +
-                "    android:layout_height=\"match_parent\"\n" +
-                "    android:padding=\"16dp\"\n" +
-                "    android:background=\"#FFFFFF\">\n\n" +
-                "    <ImageView\n" +
-                "        android:id=\"@+id/iv_logo\"\n" +
-                "        android:layout_width=\"96dp\"\n" +
-                "        android:layout_height=\"96dp\"\n" +
-                "        android:layout_centerHorizontal=\"true\"\n" +
-                "        android:layout_marginTop=\"120dp\"\n" +
-                "        android:src=\"@drawable/ic_launcher\" />\n\n" +
-                "    <TextView\n" +
-                "        android:id=\"@+id/tv_title\"\n" +
-                "        android:layout_width=\"wrap_content\"\n" +
-                "        android:layout_height=\"wrap_content\"\n" +
-                "        android:layout_below=\"@+id/iv_logo\"\n" +
-                "        android:layout_centerHorizontal=\"true\"\n" +
-                "        android:layout_marginTop=\"24dp\"\n" +
-                "        android:text=\"@string/app_name\"\n" +
-                "        android:textSize=\"22sp\"\n" +
-                "        android:textStyle=\"bold\"\n" +
-                "        android:textColor=\"#212121\" />\n\n" +
-                "    <TextView\n" +
-                "        android:layout_width=\"wrap_content\"\n" +
-                "        android:layout_height=\"wrap_content\"\n" +
-                "        android:layout_below=\"@+id/tv_title\"\n" +
-                "        android:layout_centerHorizontal=\"true\"\n" +
-                "        android:layout_marginTop=\"8dp\"\n" +
-                "        android:text=\"@string/hello_world\"\n" +
-                "        android:textSize=\"15sp\"\n" +
-                "        android:textColor=\"#757575\" />\n" +
-                "</RelativeLayout>\n"
-        );
+        // 6. res/layout/activity_main.xml & 7. MainActivity.java
+        boolean isBasic = templateType != null && templateType.toLowerCase().contains("basic");
 
-        // 7. MainActivity.java
-        writeFile(new File(javaDir, "MainActivity.java"),
-                "package " + packageName + ";\n\n" +
-                "import android.os.Bundle;\n" +
-                "import androidx.appcompat.app.AppCompatActivity;\n\n" +
-                "public class MainActivity extends AppCompatActivity {\n\n" +
-                "    @Override\n" +
-                "    protected void onCreate(Bundle savedInstanceState) {\n" +
-                "        super.onCreate(savedInstanceState);\n" +
-                "        setContentView(R.layout.activity_main);\n" +
-                "    }\n" +
-                "}\n"
-        );
+        if (isBasic) {
+            writeFile(new File(layoutDir, "activity_main.xml"),
+                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                    "<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                    "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n" +
+                    "    android:layout_width=\"match_parent\"\n" +
+                    "    android:layout_height=\"match_parent\">\n\n" +
+                    "    <com.google.android.material.appbar.AppBarLayout\n" +
+                    "        android:layout_width=\"match_parent\"\n" +
+                    "        android:layout_height=\"wrap_content\">\n\n" +
+                    "        <androidx.appcompat.widget.Toolbar\n" +
+                    "            android:id=\"@+id/toolbar\"\n" +
+                    "            android:layout_width=\"match_parent\"\n" +
+                    "            android:layout_height=\"?attr/actionBarSize\"\n" +
+                    "            app:title=\"@string/app_name\" />\n" +
+                    "    </com.google.android.material.appbar.AppBarLayout>\n\n" +
+                    "    <RelativeLayout\n" +
+                    "        android:layout_width=\"match_parent\"\n" +
+                    "        android:layout_height=\"match_parent\"\n" +
+                    "        android:padding=\"16dp\"\n" +
+                    "        app:layout_behavior=\"@string/appbar_scrolling_view_behavior\">\n\n" +
+                    "        <TextView\n" +
+                    "            android:id=\"@+id/tv_title\"\n" +
+                    "            android:layout_width=\"wrap_content\"\n" +
+                    "            android:layout_height=\"wrap_content\"\n" +
+                    "            android:layout_centerInParent=\"true\"\n" +
+                    "            android:text=\"@string/hello_world\"\n" +
+                    "            android:textSize=\"18sp\"\n" +
+                    "            android:textColor=\"#212121\" />\n" +
+                    "    </RelativeLayout>\n\n" +
+                    "    <com.google.android.material.floatingactionbutton.FloatingActionButton\n" +
+                    "        android:id=\"@+id/fab\"\n" +
+                    "        android:layout_width=\"wrap_content\"\n" +
+                    "        android:layout_height=\"wrap_content\"\n" +
+                    "        android:layout_gravity=\"bottom|end\"\n" +
+                    "        android:layout_margin=\"16dp\"\n" +
+                    "        app:srcCompat=\"@android:drawable/ic_dialog_email\" />\n" +
+                    "</androidx.coordinatorlayout.widget.CoordinatorLayout>\n"
+            );
+
+            writeFile(new File(javaDir, "MainActivity.java"),
+                    "package " + packageName + ";\n\n" +
+                    "import android.os.Bundle;\n" +
+                    "import android.widget.Toast;\n" +
+                    "import androidx.appcompat.app.AppCompatActivity;\n" +
+                    "import androidx.appcompat.widget.Toolbar;\n" +
+                    "import com.google.android.material.floatingactionbutton.FloatingActionButton;\n\n" +
+                    "public class MainActivity extends AppCompatActivity {\n\n" +
+                    "    @Override\n" +
+                    "    protected void onCreate(Bundle savedInstanceState) {\n" +
+                    "        super.onCreate(savedInstanceState);\n" +
+                    "        setContentView(R.layout.activity_main);\n\n" +
+                    "        Toolbar toolbar = findViewById(R.id.toolbar);\n" +
+                    "        setSupportActionBar(toolbar);\n\n" +
+                    "        FloatingActionButton fab = findViewById(R.id.fab);\n" +
+                    "        if (fab != null) {\n" +
+                    "            fab.setOnClickListener(view -> \n" +
+                    "                Toast.makeText(MainActivity.this, \"Action Clicked!\", Toast.LENGTH_SHORT).show()\n" +
+                    "            );\n" +
+                    "        }\n" +
+                    "    }\n" +
+                    "}\n"
+            );
+        } else {
+            writeFile(new File(layoutDir, "activity_main.xml"),
+                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                    "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                    "    android:layout_width=\"match_parent\"\n" +
+                    "    android:layout_height=\"match_parent\"\n" +
+                    "    android:padding=\"16dp\"\n" +
+                    "    android:background=\"#FFFFFF\">\n\n" +
+                    "    <ImageView\n" +
+                    "        android:id=\"@+id/iv_logo\"\n" +
+                    "        android:layout_width=\"96dp\"\n" +
+                    "        android:layout_height=\"96dp\"\n" +
+                    "        android:layout_centerHorizontal=\"true\"\n" +
+                    "        android:layout_marginTop=\"120dp\"\n" +
+                    "        android:src=\"@drawable/ic_launcher\" />\n\n" +
+                    "    <TextView\n" +
+                    "        android:id=\"@+id/tv_title\"\n" +
+                    "        android:layout_width=\"wrap_content\"\n" +
+                    "        android:layout_height=\"wrap_content\"\n" +
+                    "        android:layout_below=\"@+id/iv_logo\"\n" +
+                    "        android:layout_centerHorizontal=\"true\"\n" +
+                    "        android:layout_marginTop=\"24dp\"\n" +
+                    "        android:text=\"@string/app_name\"\n" +
+                    "        android:textSize=\"22sp\"\n" +
+                    "        android:textStyle=\"bold\"\n" +
+                    "        android:textColor=\"#212121\" />\n\n" +
+                    "    <TextView\n" +
+                    "        android:layout_width=\"wrap_content\"\n" +
+                    "        android:layout_height=\"wrap_content\"\n" +
+                    "        android:layout_below=\"@+id/tv_title\"\n" +
+                    "        android:layout_centerHorizontal=\"true\"\n" +
+                    "        android:layout_marginTop=\"8dp\"\n" +
+                    "        android:text=\"@string/hello_world\"\n" +
+                    "        android:textSize=\"15sp\"\n" +
+                    "        android:textColor=\"#757575\" />\n" +
+                    "</RelativeLayout>\n"
+            );
+
+            writeFile(new File(javaDir, "MainActivity.java"),
+                    "package " + packageName + ";\n\n" +
+                    "import android.os.Bundle;\n" +
+                    "import androidx.appcompat.app.AppCompatActivity;\n\n" +
+                    "public class MainActivity extends AppCompatActivity {\n\n" +
+                    "    @Override\n" +
+                    "    protected void onCreate(Bundle savedInstanceState) {\n" +
+                    "        super.onCreate(savedInstanceState);\n" +
+                    "        setContentView(R.layout.activity_main);\n" +
+                    "    }\n" +
+                    "}\n"
+            );
+        }
 
         // 8. Launcher Icon
         saveLauncherIcon(context, drawableDir, customIconUri, presetIconResId);
@@ -222,28 +302,47 @@ public class ProjectGenerator {
 
     private static void saveLauncherIcon(Context context, File drawableDir, Uri customIconUri, int presetResId) {
         try {
+            if (!drawableDir.exists()) {
+                drawableDir.mkdirs();
+            }
             File iconFile = new File(drawableDir, "ic_launcher.png");
             Bitmap bitmap = null;
 
             if (customIconUri != null && context != null) {
-                bitmap = MediaStore.Images.Media.getBitmap(context.getContentResolver(), customIconUri);
-            } else if (presetResId != 0 && context != null) {
-                Drawable d = ContextCompat.getDrawable(context, presetResId);
-                if (d != null) {
-                    bitmap = Bitmap.createBitmap(192, 192, Bitmap.Config.ARGB_8888);
-                    Canvas canvas = new Canvas(bitmap);
-                    d.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-                    d.draw(canvas);
+                try (InputStream is = context.getContentResolver().openInputStream(customIconUri)) {
+                    if (is != null) {
+                        bitmap = BitmapFactory.decodeStream(is);
+                    }
+                } catch (Throwable t) {
+                    Log.w(TAG, "Failed reading custom icon stream: " + t.getMessage());
+                }
+            }
+
+            if (bitmap == null && presetResId != 0 && context != null) {
+                try {
+                    Drawable d = ContextCompat.getDrawable(context, presetResId);
+                    if (d != null) {
+                        bitmap = Bitmap.createBitmap(192, 192, Bitmap.Config.ARGB_8888);
+                        Canvas canvas = new Canvas(bitmap);
+                        d.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+                        d.draw(canvas);
+                    }
+                } catch (Throwable t) {
+                    Log.w(TAG, "Failed loading preset drawable: " + t.getMessage());
                 }
             }
 
             if (bitmap == null && context != null) {
-                Drawable d = ContextCompat.getDrawable(context, R.drawable.ic_launcher);
-                if (d != null) {
-                    bitmap = Bitmap.createBitmap(192, 192, Bitmap.Config.ARGB_8888);
-                    Canvas canvas = new Canvas(bitmap);
-                    d.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-                    d.draw(canvas);
+                try {
+                    Drawable d = ContextCompat.getDrawable(context, R.drawable.ic_launcher);
+                    if (d != null) {
+                        bitmap = Bitmap.createBitmap(192, 192, Bitmap.Config.ARGB_8888);
+                        Canvas canvas = new Canvas(bitmap);
+                        d.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+                        d.draw(canvas);
+                    }
+                } catch (Throwable t) {
+                    Log.w(TAG, "Failed loading default launcher: " + t.getMessage());
                 }
             }
 
@@ -254,12 +353,15 @@ public class ProjectGenerator {
                     fos.flush();
                 }
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Log.e(TAG, "Failed creating launcher icon: " + e.getMessage(), e);
         }
     }
 
     private static void writeFile(File file, String content) throws Exception {
+        if (file.getParentFile() != null && !file.getParentFile().exists()) {
+            file.getParentFile().mkdirs();
+        }
         try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)) {
             writer.write(content);
             writer.flush();

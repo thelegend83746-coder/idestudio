@@ -127,6 +127,14 @@ public class EditorActivity extends AppCompatActivity {
         openDefaultFile();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (proController != null) {
+            proController.applyPreferences();
+        }
+    }
+
     private void initViews() {
         drawerLayout = findViewById(R.id.drawer_layout_editor);
         tvToolbarProject = findViewById(R.id.tv_toolbar_project_name);

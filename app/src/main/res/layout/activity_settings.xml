@@ -4,22 +4,24 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F8F9FA">
+    android:background="@color/bg_light">
 
+    <!-- Top App Bar -->
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar_settings"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="#FFFFFF"
-        android:elevation="4dp"
-        app:title="AI &amp; System Settings"
-        app:titleTextColor="#212121"
-        app:navigationIcon="?android:attr/homeAsUpIndicator" />
+        android:background="@color/bg_light"
+        android:elevation="0dp"
+        app:title="Settings"
+        app:titleTextColor="@color/text_navy_dark"
+        app:navigationIcon="@drawable/ic_arrow_back" />
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:clipToPadding="false"
         android:padding="16dp">
 
         <LinearLayout
@@ -27,14 +29,12 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Workspace Card -->
-            <androidx.cardview.widget.CardView
+            <!-- Card 1: Storage & Workspace -->
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.IDEStudio.Card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="#FFFFFF">
+                android:layout_marginBottom="16dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -43,42 +43,92 @@
                     android:padding="16dp">
 
                     <TextView
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:text="Storage &amp; Workspace"
+                        android:textColor="@color/text_navy_dark"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
                         android:text="Workspace Location"
-                        android:textStyle="bold"
-                        android:textSize="14sp"
-                        android:textColor="#212121"
-                        android:layout_marginBottom="4dp" />
+                        android:textColor="@color/text_grey_blue"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tv_settings_workspace"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:background="@drawable/bg_card_rounded"
+                        android:fontFamily="monospace"
+                        android:padding="10dp"
                         android:text="/storage/emulated/0/idestudio"
-                        android:textSize="13sp"
-                        android:textColor="#1976D2"
-                        android:fontFamily="monospace" />
+                        android:textColor="@color/primary_indigo"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="Backups Location"
+                        android:textColor="@color/text_grey_blue"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="All projects and backups are stored inside this folder."
-                        android:textSize="11sp"
-                        android:textColor="#757575"
-                        android:layout_marginTop="4dp" />
+                        android:layout_marginTop="4dp"
+                        android:background="@drawable/bg_card_rounded"
+                        android:fontFamily="monospace"
+                        android:padding="10dp"
+                        android:text="/storage/emulated/0/idestudio/backups"
+                        android:textColor="@color/text_navy_dark"
+                        android:textSize="13sp" />
+
+                    <!-- Storage Permission Status / Grant -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/tv_permission_status"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="All Files Access: Checking..."
+                            android:textColor="@color/text_grey_blue"
+                            android:textSize="13sp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_grant_storage_perm"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="38dp"
+                            android:text="Grant Access"
+                            android:textColor="@color/primary_indigo"
+                            android:textSize="12sp"
+                            app:cornerRadius="8dp"
+                            app:strokeColor="@color/primary_indigo" />
+                    </LinearLayout>
 
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
-            <!-- AI Configuration Card -->
-            <androidx.cardview.widget.CardView
+            <!-- Card 2: Editor Preferences -->
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.IDEStudio.Card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="#FFFFFF">
+                android:layout_marginBottom="16dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -87,175 +137,352 @@
                     android:padding="16dp">
 
                     <TextView
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Ollama / Cloud AI Configuration"
-                        android:textStyle="bold"
-                        android:textSize="14sp"
-                        android:textColor="#212121"
-                        android:layout_marginBottom="12dp" />
+                        android:text="Editor Preferences"
+                        android:textColor="@color/text_navy_dark"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
 
-                    <!-- Quick Preset Buttons -->
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Quick Presets:"
-                        android:textSize="12sp"
-                        android:textColor="#616161"
-                        android:layout_marginBottom="6dp" />
-
+                    <!-- Font size & zoom indicator -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginTop="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                        <Button
-                            android:id="@+id/btn_preset_local"
+                        <LinearLayout
                             android:layout_width="0dp"
-                            android:layout_height="36dp"
+                            android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Local"
-                            android:textSize="11sp"
-                            android:background="@drawable/bg_button_secondary"
-                            android:textColor="#212121"
-                            android:layout_marginEnd="4dp" />
+                            android:orientation="vertical">
 
-                        <Button
-                            android:id="@+id/btn_preset_groq"
-                            android:layout_width="0dp"
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Default Code Font Size"
+                                android:textColor="@color/text_navy_dark"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:id="@+id/tv_settings_font_size"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="13sp (Use two fingers to zoom in editor)"
+                                android:textColor="@color/text_grey_blue"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_reset_zoom"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
                             android:layout_height="36dp"
-                            android:layout_weight="1"
-                            android:text="Groq"
-                            android:textSize="11sp"
-                            android:background="@drawable/bg_button_secondary"
-                            android:textColor="#212121"
-                            android:layout_marginEnd="4dp" />
-
-                        <Button
-                            android:id="@+id/btn_preset_openrouter"
-                            android:layout_width="0dp"
-                            android:layout_height="36dp"
-                            android:layout_weight="1"
-                            android:text="OpenRouter"
-                            android:textSize="11sp"
-                            android:background="@drawable/bg_button_secondary"
-                            android:textColor="#212121" />
-
+                            android:text="Reset (100%)"
+                            android:textColor="@color/primary_indigo"
+                            android:textSize="12sp" />
                     </LinearLayout>
 
-                    <!-- Base URL -->
-                    <TextView
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="10dp"
+                        android:background="@color/bg_card_stroke" />
+
+                    <!-- Line Numbers Switch -->
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switch_line_numbers"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="API Base URL (e.g. http://localhost:11434 or https://...)"
+                        android:checked="true"
+                        android:text="Show Line Numbers"
+                        android:textColor="@color/text_navy_dark"
+                        android:textSize="14sp" />
+
+                    <!-- Symbol Bar Switch -->
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switch_symbol_bar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:checked="true"
+                        android:text="Mobile Symbol Bar"
+                        android:textColor="@color/text_navy_dark"
+                        android:textSize="14sp" />
+
+                    <!-- Auto Brackets Switch -->
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switch_auto_brackets"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:checked="true"
+                        android:text="Auto-Close Brackets &amp; Quotes"
+                        android:textColor="@color/text_navy_dark"
+                        android:textSize="14sp" />
+
+                    <!-- Word Wrap Switch -->
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switch_word_wrap"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:checked="false"
+                        android:text="Word Wrap"
+                        android:textColor="@color/text_navy_dark"
+                        android:textSize="14sp" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Card 3: AI Assistant Configuration -->
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.IDEStudio.Card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="AI Assistant Configuration"
+                        android:textColor="@color/text_navy_dark"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Supports Ollama Local, Groq, OpenRouter, Gemini &amp; OpenAI"
+                        android:textColor="@color/text_grey_blue"
+                        android:textSize="12sp" />
+
+                    <!-- Presets -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="Quick Presets:"
+                        android:textColor="@color/text_grey_blue"
                         android:textSize="12sp"
-                        android:textColor="#616161"
-                        android:layout_marginBottom="4dp" />
+                        android:textStyle="bold" />
+
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:scrollbars="none">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_preset_local"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="36dp"
+                                android:layout_marginEnd="6dp"
+                                android:text="Local Ollama"
+                                android:textSize="11sp"
+                                app:cornerRadius="8dp" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_preset_groq"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="36dp"
+                                android:layout_marginEnd="6dp"
+                                android:text="Groq Cloud"
+                                android:textSize="11sp"
+                                app:cornerRadius="8dp" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_preset_openrouter"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="36dp"
+                                android:layout_marginEnd="6dp"
+                                android:text="OpenRouter"
+                                android:textSize="11sp"
+                                app:cornerRadius="8dp" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_preset_gemini"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="36dp"
+                                android:layout_marginEnd="6dp"
+                                android:text="Google Gemini"
+                                android:textSize="11sp"
+                                app:cornerRadius="8dp" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_preset_openai"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="36dp"
+                                android:text="OpenAI"
+                                android:textSize="11sp"
+                                app:cornerRadius="8dp" />
+                        </LinearLayout>
+                    </HorizontalScrollView>
+
+                    <!-- API Base URL -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:text="API Base URL"
+                        android:textColor="@color/text_navy_dark"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
 
                     <EditText
                         android:id="@+id/et_settings_base_url"
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
-                        android:background="@drawable/bg_input_field"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/bg_card_rounded"
                         android:hint="http://localhost:11434"
-                        android:textSize="13sp"
-                        android:textColor="#212121"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
+                        android:paddingHorizontal="12dp"
                         android:singleLine="true"
-                        android:layout_marginBottom="14dp" />
+                        android:textColor="@color/text_navy_dark"
+                        android:textSize="13sp" />
 
                     <!-- API Key -->
                     <TextView
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Real API Key (Ollama Cloud / Groq / OpenRouter / OpenAI)"
-                        android:textSize="12sp"
-                        android:textColor="#616161"
-                        android:layout_marginBottom="4dp" />
+                        android:layout_marginTop="12dp"
+                        android:text="API Key (Real Key)"
+                        android:textColor="@color/text_navy_dark"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
 
                     <EditText
                         android:id="@+id/et_settings_api_key"
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
-                        android:background="@drawable/bg_input_field"
-                        android:hint="Paste your API key here (e.g. gsk_... or sk-...)"
-                        android:textSize="13sp"
-                        android:textColor="#212121"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
-                        android:singleLine="true"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/bg_card_rounded"
+                        android:hint="Paste your API Key (e.g. gsk_... or sk-...)"
                         android:inputType="textPassword"
-                        android:layout_marginBottom="14dp" />
+                        android:paddingHorizontal="12dp"
+                        android:singleLine="true"
+                        android:textColor="@color/text_navy_dark"
+                        android:textSize="13sp" />
 
                     <!-- Model Name -->
                     <TextView
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Model Name (e.g. llama3, mistral, llama-3.1-70b-versatile)"
-                        android:textSize="12sp"
-                        android:textColor="#616161"
-                        android:layout_marginBottom="4dp" />
+                        android:layout_marginTop="12dp"
+                        android:text="Model Name"
+                        android:textColor="@color/text_navy_dark"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
 
                     <EditText
                         android:id="@+id/et_settings_model"
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
-                        android:background="@drawable/bg_input_field"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/bg_card_rounded"
                         android:hint="llama3"
-                        android:textSize="13sp"
-                        android:textColor="#212121"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
+                        android:paddingHorizontal="12dp"
                         android:singleLine="true"
-                        android:layout_marginBottom="16dp" />
+                        android:textColor="@color/text_navy_dark"
+                        android:textSize="13sp" />
 
-                    <!-- Test Connection Button -->
-                    <Button
+                    <!-- Test Connection -->
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_settings_test_conn"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="match_parent"
-                        android:layout_height="42dp"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="16dp"
                         android:text="Test API Connection"
+                        android:textColor="@color/primary_indigo"
                         android:textSize="13sp"
-                        android:textColor="#1976D2"
-                        android:background="@drawable/bg_button_secondary"
-                        android:layout_marginBottom="8dp" />
+                        app:cornerRadius="10dp"
+                        app:strokeColor="@color/primary_indigo" />
 
-                    <!-- Test Status Result -->
+                    <!-- Status Display -->
                     <TextView
                         android:id="@+id/tv_settings_test_result"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:padding="8dp"
                         android:textSize="12sp"
-                        android:textColor="#757575"
-                        android:visibility="gone"
-                        android:padding="8dp" />
+                        android:visibility="gone" />
 
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Card 4: About IDE Studio -->
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.IDEStudio.Card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="About IDE Studio"
+                        android:textColor="@color/text_navy_dark"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="IDE Studio Pro — Native Android Mobile IDE\nVersion: 1.0.0 Pro (API 34 Target)\nGitHub: github.com/thelegend83746-coder/idestudio"
+                        android:textColor="@color/text_grey_blue"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
     </ScrollView>
 
-    <!-- Save Button -->
+    <!-- Save Button Container -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:background="#FFFFFF"
-        android:elevation="8dp">
+        android:background="@color/bg_card"
+        android:elevation="8dp"
+        android:padding="16dp">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_settings_save"
             android:layout_width="match_parent"
             android:layout_height="48dp"
+            android:backgroundTint="@color/primary_indigo"
             android:text="Save Settings"
-            android:textSize="14sp"
+            android:textColor="@color/text_white"
+            android:textSize="15sp"
             android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:background="@drawable/bg_button_primary" />
-
+            app:cornerRadius="12dp" />
     </LinearLayout>
 
 </LinearLayout>

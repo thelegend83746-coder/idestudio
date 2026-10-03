@@ -74,6 +74,14 @@ public class ConfigureProjectActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_configure_project);
 
+        if (getIntent() != null) {
+            if (getIntent().hasExtra(com.idestudio.app.core.constants.AppConstants.EXTRA_TEMPLATE_NAME)) {
+                templateType = getIntent().getStringExtra(com.idestudio.app.core.constants.AppConstants.EXTRA_TEMPLATE_NAME);
+            } else if (getIntent().hasExtra("template_name")) {
+                templateType = getIntent().getStringExtra("template_name");
+            }
+        }
+
         initViews();
         setupListeners();
         updatePathPreview();
@@ -91,6 +99,11 @@ public class ConfigureProjectActivity extends AppCompatActivity {
         tvTargetSdkDisplay = findViewById(R.id.tv_target_sdk_display);
         btnExit = findViewById(R.id.btn_config_exit);
         btnCreate = findViewById(R.id.btn_config_create);
+
+        TextView tvSubtitle = findViewById(R.id.tv_config_template_subtitle);
+        if (tvSubtitle != null && templateType != null) {
+            tvSubtitle.setText("Template: " + templateType);
+        }
 
         View btnChangeIcon = findViewById(R.id.btn_change_icon);
         if (btnChangeIcon != null) {
@@ -266,6 +279,27 @@ public class ConfigureProjectActivity extends AppCompatActivity {
             return;
         }
         if (tvPackageError != null) tvPackageError.setVisibility(View.GONE);
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            if (!android.os.Environment.isExternalStorageManager()) {
+                new AlertDialog.Builder(this)
+                        .setTitle("Storage Permission Required")
+                        .setMessage("All Files Access is required to create your project in /storage/emulated/0/idestudio.\n\nPlease allow access in Settings.")
+                        .setPositiveButton("Open Settings", (d, w) -> {
+                            try {
+                                Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                                intent.setData(Uri.parse("package:" + getPackageName()));
+                                startActivity(intent);
+                            } catch (Exception e) {
+                                Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                                startActivity(intent);
+                            }
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+                return;
+            }
+        }
 
         if (btnCreate != null) {
             btnCreate.setEnabled(false);

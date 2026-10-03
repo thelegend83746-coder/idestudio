@@ -62,12 +62,17 @@ public class LocalProjectStore {
         if (preferred.exists() || preferred.mkdirs()) {
             return preferred;
         }
-        File sdcard = Environment.getExternalStorageDirectory();
-        File fallback = new File(sdcard, "idestudio");
-        if (!fallback.exists()) {
-            fallback.mkdirs();
+        File sdcard = new File(Environment.getExternalStorageDirectory(), "idestudio");
+        if (sdcard.exists() || sdcard.mkdirs()) {
+            return sdcard;
         }
-        return fallback;
+        if (com.idestudio.app.IDEStudioApp.getInstance() != null) {
+            File appStorage = new File(com.idestudio.app.IDEStudioApp.getInstance().getExternalFilesDir(null), "idestudio");
+            if (appStorage.exists() || appStorage.mkdirs()) {
+                return appStorage;
+            }
+        }
+        return preferred;
     }
 
     public static String getBaseDirPath() {
