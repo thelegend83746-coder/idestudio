@@ -19,7 +19,6 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 
 import com.idestudio.app.R;
 import com.idestudio.app.domain.project.LocalProjectStore;
@@ -53,21 +52,21 @@ public class ConfigureProjectActivity extends AppCompatActivity {
     };
 
     private ImageView imgAppIcon;
-    private TextView tvIconHint;
     private EditText etAppName;
     private EditText etPackageName;
     private TextView tvPackageError;
-    private TextView tvProjectPath;
-    private LinearLayout btnMinSdk;
-    private TextView tvMinSdkValue;
-    private LinearLayout btnTargetSdk;
-    private TextView tvTargetSdkValue;
+    private TextView tvProjectLocation;
+    private View btnMinSdk;
+    private TextView tvMinSdkDisplay;
+    private View btnTargetSdk;
+    private TextView tvTargetSdkDisplay;
+    private View btnExit;
     private Button btnCreate;
 
     private int selectedMinSdk = 21;
     private int selectedTargetSdk = 34;
     private Uri customIconUri = null;
-    private int selectedPresetResId = 0;
+    private int selectedPresetResId = R.drawable.ic_launcher;
     private String templateType = "Empty Activity";
 
     @Override
@@ -81,77 +80,90 @@ public class ConfigureProjectActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        Toolbar toolbar = findViewById(R.id.toolbar_configure);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("New Android Project");
+        imgAppIcon = findViewById(R.id.iv_app_logo_preview);
+        etAppName = findViewById(R.id.et_app_name);
+        etPackageName = findViewById(R.id.et_package_name);
+        tvPackageError = findViewById(R.id.tv_package_error);
+        tvProjectLocation = findViewById(R.id.tv_project_location);
+        btnMinSdk = findViewById(R.id.btn_select_min_sdk);
+        tvMinSdkDisplay = findViewById(R.id.tv_min_sdk_display);
+        btnTargetSdk = findViewById(R.id.btn_select_target_sdk);
+        tvTargetSdkDisplay = findViewById(R.id.tv_target_sdk_display);
+        btnExit = findViewById(R.id.btn_config_exit);
+        btnCreate = findViewById(R.id.btn_config_create);
+
+        View btnChangeIcon = findViewById(R.id.btn_change_icon);
+        if (btnChangeIcon != null) {
+            btnChangeIcon.setOnClickListener(v -> showIconPickerDialog());
         }
-        toolbar.setNavigationOnClickListener(v -> finish());
 
-        imgAppIcon = findViewById(R.id.img_configure_icon);
-        tvIconHint = findViewById(R.id.tv_configure_icon_hint);
-        etAppName = findViewById(R.id.et_configure_app_name);
-        etPackageName = findViewById(R.id.et_configure_package_name);
-        tvPackageError = findViewById(R.id.tv_configure_package_error);
-        tvProjectPath = findViewById(R.id.tv_configure_project_path);
-        btnMinSdk = findViewById(R.id.btn_configure_min_sdk);
-        tvMinSdkValue = findViewById(R.id.tv_configure_min_sdk_value);
-        btnTargetSdk = findViewById(R.id.btn_configure_target_sdk);
-        tvTargetSdkValue = findViewById(R.id.tv_configure_target_sdk_value);
-        btnCreate = findViewById(R.id.btn_configure_create);
-
-        findViewById(R.id.btn_configure_pick_gallery).setOnClickListener(v -> openGalleryPicker());
-        findViewById(R.id.btn_configure_pick_preset).setOnClickListener(v -> openPresetPicker());
-
-        tvMinSdkValue.setText(getSdkLabel(selectedMinSdk));
-        tvTargetSdkValue.setText(getSdkLabel(selectedTargetSdk));
+        if (tvMinSdkDisplay != null) {
+            tvMinSdkDisplay.setText(getSdkLabel(selectedMinSdk));
+        }
+        if (tvTargetSdkDisplay != null) {
+            tvTargetSdkDisplay.setText(getSdkLabel(selectedTargetSdk));
+        }
     }
 
     private void setupListeners() {
-        etAppName.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+        if (etAppName != null) {
+            etAppName.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                String name = s.toString().trim();
-                String sanitized = name.toLowerCase().replaceAll("[^a-z0-9]", "");
-                if (sanitized.isEmpty()) sanitized = "myapp";
-                etPackageName.setHint("com.example." + sanitized);
-                updatePathPreview();
-            }
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    String name = s.toString().trim();
+                    String sanitized = name.toLowerCase().replaceAll("[^a-z0-9]", "");
+                    if (sanitized.isEmpty()) sanitized = "myapp";
+                    if (etPackageName != null) {
+                        etPackageName.setHint("com.example." + sanitized);
+                    }
+                    updatePathPreview();
+                }
 
-            @Override
-            public void afterTextChanged(Editable s) {}
-        });
+                @Override
+                public void afterTextChanged(Editable s) {}
+            });
+        }
 
-        btnMinSdk.setOnClickListener(v -> showSdkPickerDialog("Select Minimum SDK", selectedMinSdk, sdk -> {
-            selectedMinSdk = sdk;
-            if (selectedMinSdk > selectedTargetSdk) {
-                selectedTargetSdk = selectedMinSdk;
-            }
-            tvMinSdkValue.setText(getSdkLabel(selectedMinSdk));
-            tvTargetSdkValue.setText(getSdkLabel(selectedTargetSdk));
-        }));
+        if (btnMinSdk != null) {
+            btnMinSdk.setOnClickListener(v -> showSdkPickerDialog("Select Minimum SDK", selectedMinSdk, sdk -> {
+                selectedMinSdk = sdk;
+                if (selectedMinSdk > selectedTargetSdk) {
+                    selectedTargetSdk = selectedMinSdk;
+                }
+                if (tvMinSdkDisplay != null) tvMinSdkDisplay.setText(getSdkLabel(selectedMinSdk));
+                if (tvTargetSdkDisplay != null) tvTargetSdkDisplay.setText(getSdkLabel(selectedTargetSdk));
+            }));
+        }
 
-        btnTargetSdk.setOnClickListener(v -> showSdkPickerDialog("Select Target SDK", selectedTargetSdk, sdk -> {
-            if (sdk < selectedMinSdk) {
-                Toast.makeText(this, "Target SDK cannot be less than Minimum SDK", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            selectedTargetSdk = sdk;
-            tvTargetSdkValue.setText(getSdkLabel(selectedTargetSdk));
-        }));
+        if (btnTargetSdk != null) {
+            btnTargetSdk.setOnClickListener(v -> showSdkPickerDialog("Select Target SDK", selectedTargetSdk, sdk -> {
+                if (sdk < selectedMinSdk) {
+                    Toast.makeText(this, "Target SDK cannot be less than Minimum SDK", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                selectedTargetSdk = sdk;
+                if (tvTargetSdkDisplay != null) tvTargetSdkDisplay.setText(getSdkLabel(selectedTargetSdk));
+            }));
+        }
 
-        btnCreate.setOnClickListener(v -> createProject());
+        if (btnExit != null) {
+            btnExit.setOnClickListener(v -> finish());
+        }
+
+        if (btnCreate != null) {
+            btnCreate.setOnClickListener(v -> createProject());
+        }
     }
 
     private void updatePathPreview() {
-        String name = etAppName.getText().toString().trim();
+        if (tvProjectLocation == null) return;
+        String name = etAppName != null ? etAppName.getText().toString().trim() : "";
         if (name.isEmpty()) name = "MyApplication";
         String basePath = LocalProjectStore.getBaseDirPath();
-        tvProjectPath.setText(basePath + "/" + name);
+        tvProjectLocation.setText(basePath + "/" + name);
     }
 
     private String getSdkLabel(int api) {
@@ -186,15 +198,10 @@ public class ConfigureProjectActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void openGalleryPicker() {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("image/*");
-        startActivityForResult(Intent.createChooser(intent, "Select App Icon"), RC_PICK_IMAGE);
-    }
-
-    private void openPresetPicker() {
-        String[] presets = {"Game Console", "Code & Dev", "Rocket Launch", "Default Android"};
+    private void showIconPickerDialog() {
+        String[] options = {"Pick from Gallery", "Game Console", "Code & Dev", "Rocket Launch", "Default Launcher"};
         int[] drawables = {
+                0,
                 R.drawable.ic_preset_game,
                 R.drawable.ic_preset_code,
                 R.drawable.ic_preset_rocket,
@@ -202,15 +209,26 @@ public class ConfigureProjectActivity extends AppCompatActivity {
         };
 
         new AlertDialog.Builder(this)
-                .setTitle("Choose Preset Icon")
-                .setItems(presets, (dialog, which) -> {
-                    selectedPresetResId = drawables[which];
-                    customIconUri = null;
-                    imgAppIcon.setImageResource(selectedPresetResId);
-                    tvIconHint.setText("Preset: " + presets[which]);
+                .setTitle("Select App Icon")
+                .setItems(options, (dialog, which) -> {
+                    if (which == 0) {
+                        openGalleryPicker();
+                    } else {
+                        selectedPresetResId = drawables[which];
+                        customIconUri = null;
+                        if (imgAppIcon != null) {
+                            imgAppIcon.setImageResource(selectedPresetResId);
+                        }
+                    }
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
+    }
+
+    private void openGalleryPicker() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("image/*");
+        startActivityForResult(Intent.createChooser(intent, "Select App Icon"), RC_PICK_IMAGE);
     }
 
     @Override
@@ -219,17 +237,18 @@ public class ConfigureProjectActivity extends AppCompatActivity {
         if (requestCode == RC_PICK_IMAGE && resultCode == Activity.RESULT_OK && data != null && data.getData() != null) {
             customIconUri = data.getData();
             selectedPresetResId = 0;
-            imgAppIcon.setImageURI(customIconUri);
-            tvIconHint.setText("Custom Gallery Image");
+            if (imgAppIcon != null) {
+                imgAppIcon.setImageURI(customIconUri);
+            }
         }
     }
 
     private void createProject() {
-        String name = etAppName.getText().toString().trim();
-        String pkg = etPackageName.getText().toString().trim();
+        String name = etAppName != null ? etAppName.getText().toString().trim() : "";
+        String pkg = etPackageName != null ? etPackageName.getText().toString().trim() : "";
 
         if (name.isEmpty()) {
-            etAppName.setError("Please enter an application name");
+            if (etAppName != null) etAppName.setError("Please enter an application name");
             return;
         }
 
@@ -240,14 +259,18 @@ public class ConfigureProjectActivity extends AppCompatActivity {
         }
 
         if (!Pattern.matches(PACKAGE_REGEX, pkg)) {
-            tvPackageError.setVisibility(View.VISIBLE);
-            tvPackageError.setText("Invalid package name (e.g. com.company.app)");
+            if (tvPackageError != null) {
+                tvPackageError.setVisibility(View.VISIBLE);
+                tvPackageError.setText("Invalid package name (e.g. com.company.app)");
+            }
             return;
         }
-        tvPackageError.setVisibility(View.GONE);
+        if (tvPackageError != null) tvPackageError.setVisibility(View.GONE);
 
-        btnCreate.setEnabled(false);
-        btnCreate.setText("Creating Project...");
+        if (btnCreate != null) {
+            btnCreate.setEnabled(false);
+            btnCreate.setText("Creating Project...");
+        }
 
         final String finalName = name;
         final String finalPkg = pkg;
@@ -275,8 +298,10 @@ public class ConfigureProjectActivity extends AppCompatActivity {
                 });
             } catch (Exception e) {
                 new Handler(Looper.getMainLooper()).post(() -> {
-                    btnCreate.setEnabled(true);
-                    btnCreate.setText("Create Project");
+                    if (btnCreate != null) {
+                        btnCreate.setEnabled(true);
+                        btnCreate.setText("Create Project");
+                    }
                     Toast.makeText(ConfigureProjectActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
             }
