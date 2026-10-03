@@ -58,7 +58,7 @@
                         android:id="@+id/img_edit_app_icon"
                         android:layout_width="80dp"
                         android:layout_height="80dp"
-                        android:src="@mipmap/ic_launcher"
+                        android:src="@drawable/ic_launcher"
                         android:scaleType="fitCenter"
                         android:background="@drawable/bg_icon_frame"
                         android:padding="8dp" />
