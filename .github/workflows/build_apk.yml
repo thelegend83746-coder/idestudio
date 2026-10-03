@@ -1,9 +1,7 @@
-name: Build IDE Studio APK
+name: Build & Release idestudio APK
 
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
     branches: [ main, master ]
   workflow_dispatch:
 
@@ -12,7 +10,7 @@ permissions:
 
 jobs:
   build:
-    name: Build & Release APK
+    name: Compile Android APK
     runs-on: ubuntu-latest
 
     steps:
@@ -20,16 +18,17 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set up Java 17
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
-        java-version: '17'
         distribution: 'temurin'
-
-    - name: Set up Android SDK
-      uses: android-actions/setup-android@v3
+        java-version: '17'
 
     - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
+      uses: gradle/actions/setup-gradle@v4
+
+    - name: Accept Android SDK Licenses
+      run: |
+        yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses || yes | sdkmanager --licenses || true
 
     - name: Build APK with Gradle
       run: |
@@ -38,25 +37,25 @@ jobs:
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: IDE-Studio-APK
+        name: idestudio-debug-apk
         path: app/build/outputs/apk/debug/*.apk
 
-    - name: Create GitHub Release with APK
-      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    - name: Publish GitHub Release
+      if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: v1.0.${{ github.run_number }}
-        name: IDE Studio v1.0.${{ github.run_number }}
+        tag_name: v1.0.0-${{ github.run_number }}
+        name: IDE Studio v1.0.0 (Build ${{ github.run_number }})
         body: |
           🚀 **IDE Studio - Mobile Native Android IDE**
           
-          ✨ **New Features:**
-          - Two-Finger Pinch-to-Zoom (Editor & Line Numbers)
-          - Mobile Programming Symbols Bar (Tab, brackets, operators)
-          - Universal AI Assistant Client (Ollama, Groq, OpenRouter, Gemini)
-          - In-File Find & Replace with match navigation
-          - Standalone Project .zip Backups
-          - Modern VS Code Dark Theme & Status Bar
+          ✨ **What's New in this Build:**
+          - 🔍 **Two-Finger Pinch-to-Zoom**: Smooth code scaling from 10sp to 36sp with synchronized line numbers
+          - ⌨️ **Mobile Symbol Bar**: Fast programming shortcuts (`TAB`, `{ }`, `( )`, `[ ]`, `;`, `->`, etc.)
+          - 🤖 **Universal AI Assistant**: Ollama, Groq, OpenRouter, Google Gemini & OpenAI support
+          - 🔎 **In-File Find & Replace**: Instant search navigation & replace all
+          - 💾 **Project .zip Backups**: One-click standalone backup export
+          - 🎨 **Pro VS Code Dark Theme**: Modern typography & real-time status bar
         draft: false
         prerelease: false
         files: app/build/outputs/apk/debug/*.apk
