@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">IDE Studio</string>
+    <string name="title_home">Projects</string>
+    <string name="subtitle_home">Java Android IDE</string>
+
+    <!-- Project Actions -->
+    <string name="action_create_project">Create Project</string>
+    <string name="action_open">Open</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_rename">Rename</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_save">Save</string>
+    <string name="action_exit">Exit</string>
+    <string name="action_next">Next</string>
+    <string name="action_create">Create</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_delete_project_title">Delete Project</string>
+    <string name="dialog_delete_project_message">Are you sure you want to delete this project? This action cannot be undone.</string>
+    <string name="dialog_rename_project_title">Rename Project</string>
+
+    <!-- Empty State -->
+    <string name="empty_projects_title">No Projects Yet</string>
+    <string name="empty_projects_desc">Tap the + button below to create your first native Java Android project.</string>
+
+    <!-- Settings Categories -->
+    <string name="settings_title">Settings</string>
+    <string name="category_application">Application</string>
+    <string name="category_editor">Editor</string>
+    <string name="category_build_run">Build &amp; Run</string>
+    <string name="category_build_ai">Build AI Settings</string>
+    <string name="category_about">About Us</string>
+</resources>

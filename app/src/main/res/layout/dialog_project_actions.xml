@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:background="@drawable/bg_dialog_rounded">
+
+    <TextView
+        android:id="@+id/dialog_project_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Project Actions"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#212121"
+        android:paddingBottom="4dp" />
+
+    <TextView
+        android:id="@+id/dialog_project_subtitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Choose an action for this project"
+        android:textSize="12sp"
+        android:textColor="#757575"
+        android:paddingBottom="16dp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#EEEEEE"
+        android:layout_marginBottom="12dp" />
+
+    <TextView
+        android:id="@+id/action_dialog_open"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:gravity="center_vertical"
+        android:text="Open in Editor"
+        android:textSize="15sp"
+        android:textColor="#212121"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:background="?android:attr/selectableItemBackground" />
+
+    <TextView
+        android:id="@+id/action_dialog_edit"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:gravity="center_vertical"
+        android:text="Edit Project Details"
+        android:textSize="15sp"
+        android:textColor="#212121"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:background="?android:attr/selectableItemBackground" />
+
+    <TextView
+        android:id="@+id/action_dialog_export"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:gravity="center_vertical"
+        android:text="Export (.zip) Backup"
+        android:textSize="15sp"
+        android:textColor="#1976D2"
+        android:textStyle="bold"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:background="?android:attr/selectableItemBackground" />
+
+    <TextView
+        android:id="@+id/action_dialog_delete"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:gravity="center_vertical"
+        android:text="Delete Project"
+        android:textSize="15sp"
+        android:textColor="#D32F2F"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:background="?android:attr/selectableItemBackground" />
+
+</LinearLayout>

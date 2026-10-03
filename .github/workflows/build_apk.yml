@@ -1,0 +1,64 @@
+name: Build IDE Studio APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build & Release APK
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Java 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+
+    - name: Build APK with Gradle
+      run: |
+        gradle assembleDebug --stacktrace
+
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: IDE-Studio-APK
+        path: app/build/outputs/apk/debug/*.apk
+
+    - name: Create GitHub Release with APK
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v1.0.${{ github.run_number }}
+        name: IDE Studio v1.0.${{ github.run_number }}
+        body: |
+          🚀 **IDE Studio - Mobile Native Android IDE**
+          
+          ✨ **New Features:**
+          - Two-Finger Pinch-to-Zoom (Editor & Line Numbers)
+          - Mobile Programming Symbols Bar (Tab, brackets, operators)
+          - Universal AI Assistant Client (Ollama, Groq, OpenRouter, Gemini)
+          - In-File Find & Replace with match navigation
+          - Standalone Project .zip Backups
+          - Modern VS Code Dark Theme & Status Bar
+        draft: false
+        prerelease: false
+        files: app/build/outputs/apk/debug/*.apk
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
