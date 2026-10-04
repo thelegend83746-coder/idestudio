@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.idestudio.app.R;
 import com.idestudio.app.data.models.ProjectMeta;
+import com.idestudio.app.domain.compiler.OnDeviceCompilerManager;
 import com.idestudio.app.domain.project.ProjectExporter;
 import com.idestudio.app.editor.engine.JavaSyntaxHighlighter;
 import com.idestudio.app.editor.tabs.EditorTabAdapter;
@@ -49,6 +50,7 @@ import java.util.List;
  * - Synchronized Line Numbers Gutter
  * - Status Bar (Cursor line/col, total lines, zoom level, language)
  * - Multi-Tab File Manager & Project Explorer Drawer
+ * - Build & Run APK (On-Device Compiler Tools)
  */
 public class EditorActivity extends AppCompatActivity {
 
@@ -61,6 +63,7 @@ public class EditorActivity extends AppCompatActivity {
     private ImageButton btnActionUndo;
     private ImageButton btnActionRedo;
     private ImageButton btnActionSave;
+    private ImageButton btnActionRun;
     private ImageButton btnActionAi;
     private ImageButton btnActionOverflow;
 
@@ -96,6 +99,7 @@ public class EditorActivity extends AppCompatActivity {
     private EditorProFeaturesController proController;
     private EditorUndoRedoManager undoRedoManager;
     private ProjectExplorerManager explorerManager;
+    private OnDeviceCompilerManager compilerManager;
 
     // State
     private String projectName;
@@ -144,6 +148,7 @@ public class EditorActivity extends AppCompatActivity {
         btnActionUndo = findViewById(R.id.btn_action_undo);
         btnActionRedo = findViewById(R.id.btn_action_redo);
         btnActionSave = findViewById(R.id.btn_action_save);
+        btnActionRun = findViewById(R.id.btn_action_run);
         btnActionAi = findViewById(R.id.btn_action_ai);
         btnActionOverflow = findViewById(R.id.btn_action_overflow);
 
@@ -217,6 +222,9 @@ public class EditorActivity extends AppCompatActivity {
             }
         });
         rvTabs.setAdapter(tabAdapter);
+
+        // 5. On-Device Compiler Manager
+        compilerManager = new OnDeviceCompilerManager(this, projectName, projectPath);
     }
 
     private void setupListeners() {
@@ -248,6 +256,16 @@ public class EditorActivity extends AppCompatActivity {
 
         // Save
         btnActionSave.setOnClickListener(v -> saveCurrentFile());
+
+        // Build & Run APK (On-Device Compiler)
+        if (btnActionRun != null) {
+            btnActionRun.setOnClickListener(v -> {
+                saveCurrentFileSilently();
+                if (compilerManager != null) {
+                    compilerManager.showBuildDialogAndRun();
+                }
+            });
+        }
 
         // AI Assistant
         btnActionAi.setOnClickListener(v -> startActivity(new Intent(this, AIChatActivity.class)));
@@ -305,7 +323,10 @@ public class EditorActivity extends AppCompatActivity {
         if (mainActivity != null) {
             openFile(mainActivity);
         } else {
-            File manifest = new File(rootDir, "app/src/main/AndroidManifest.xml");
+            File manifest = new File(rootDir, "AndroidManifest.xml");
+            if (!manifest.exists()) {
+                manifest = new File(rootDir, "app/src/main/AndroidManifest.xml");
+            }
             if (manifest.exists()) {
                 openFile(manifest);
             }
@@ -394,29 +415,45 @@ public class EditorActivity extends AppCompatActivity {
         }
     }
 
+    private void saveCurrentFileSilently() {
+        if (activeDocument != null) {
+            String content = etCodeEditor.getText().toString();
+            try {
+                activeDocument.saveContent(content);
+            } catch (Exception ignored) {}
+        }
+    }
+
     private void showOverflowMenu(View anchor) {
         PopupMenu popup = new PopupMenu(this, anchor);
-        popup.getMenu().add(0, 1, 0, "Zoom In (+)");
-        popup.getMenu().add(0, 2, 0, "Zoom Out (-)");
-        popup.getMenu().add(0, 3, 0, "Reset Zoom (100%)");
-        popup.getMenu().add(0, 4, 0, "Export (.zip) Backup");
-        popup.getMenu().add(0, 5, 0, "Settings");
+        popup.getMenu().add(0, 1, 0, "Build & Run APK");
+        popup.getMenu().add(0, 2, 0, "Zoom In (+)");
+        popup.getMenu().add(0, 3, 0, "Zoom Out (-)");
+        popup.getMenu().add(0, 4, 0, "Reset Zoom (100%)");
+        popup.getMenu().add(0, 5, 0, "Export (.zip) Backup");
+        popup.getMenu().add(0, 6, 0, "Settings");
 
         popup.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
                 case 1:
-                    zoomController.zoomIn();
+                    saveCurrentFileSilently();
+                    if (compilerManager != null) {
+                        compilerManager.showBuildDialogAndRun();
+                    }
                     return true;
                 case 2:
-                    zoomController.zoomOut();
+                    zoomController.zoomIn();
                     return true;
                 case 3:
-                    zoomController.resetZoom();
+                    zoomController.zoomOut();
                     return true;
                 case 4:
-                    exportProject();
+                    zoomController.resetZoom();
                     return true;
                 case 5:
+                    exportProject();
+                    return true;
+                case 6:
                     startActivity(new Intent(this, SettingsActivity.class));
                     return true;
             }

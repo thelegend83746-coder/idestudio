@@ -105,6 +105,16 @@
                     android:src="@drawable/ic_save"
                     app:tint="#4CAF50" />
 
+                <!-- Build & Run APK Action (On-Device Compiler) -->
+                <ImageButton
+                    android:id="@+id/btn_action_run"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Build and Run APK"
+                    android:src="@drawable/ic_play_arrow"
+                    app:tint="#10B981" />
+
                 <!-- AI Coding Assistant -->
                 <ImageButton
                     android:id="@+id/btn_action_ai"

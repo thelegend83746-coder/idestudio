@@ -46,6 +46,14 @@ public class AIChatActivity extends AppCompatActivity {
 
         initViews();
         addWelcomeMessage();
+
+        if (getIntent() != null && getIntent().hasExtra("initial_prompt")) {
+            String initial = getIntent().getStringExtra("initial_prompt");
+            if (initial != null && !initial.trim().isEmpty() && etInput != null) {
+                etInput.setText(initial);
+                etInput.setSelection(initial.length());
+            }
+        }
     }
 
     private void initViews() {

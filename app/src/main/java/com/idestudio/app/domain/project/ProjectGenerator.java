@@ -62,79 +62,22 @@ public class ProjectGenerator {
             }
         }
 
-        // Create standard Gradle Android directory hierarchy
-        File appDir = new File(projectDir, "app");
-        File mainDir = new File(appDir, "src/main");
-        File javaDir = new File(mainDir, "java/" + packageName.replace('.', '/'));
-        File resDir = new File(mainDir, "res");
+        // Create direct On-Device Compiler Project Structure (Clean, No Gradle)
+        File javaDir = new File(projectDir, "java/" + packageName.replace('.', '/'));
+        File resDir = new File(projectDir, "res");
         File layoutDir = new File(resDir, "layout");
         File valuesDir = new File(resDir, "values");
         File drawableDir = new File(resDir, "drawable");
+        File binDir = new File(projectDir, "bin");
 
         javaDir.mkdirs();
         layoutDir.mkdirs();
         valuesDir.mkdirs();
         drawableDir.mkdirs();
+        binDir.mkdirs();
 
-        // 1. root build.gradle
-        writeFile(new File(projectDir, "build.gradle"),
-                "// Top-level build file\n" +
-                "buildscript {\n" +
-                "    repositories {\n" +
-                "        google()\n" +
-                "        mavenCentral()\n" +
-                "    }\n" +
-                "    dependencies {\n" +
-                "        classpath 'com.android.tools.build:gradle:8.2.0'\n" +
-                "    }\n" +
-                "}\n" +
-                "allprojects {\n" +
-                "    repositories {\n" +
-                "        google()\n" +
-                "        mavenCentral()\n" +
-                "    }\n" +
-                "}\n"
-        );
-
-        // 2. settings.gradle
-        writeFile(new File(projectDir, "settings.gradle"),
-                "rootProject.name = '" + projectName + "'\n" +
-                "include ':app'\n"
-        );
-
-        // 3. app/build.gradle
-        writeFile(new File(appDir, "build.gradle"),
-                "plugins {\n" +
-                "    id 'com.android.application'\n" +
-                "}\n\n" +
-                "android {\n" +
-                "    namespace '" + packageName + "'\n" +
-                "    compileSdk " + targetSdk + "\n\n" +
-                "    defaultConfig {\n" +
-                "        applicationId '" + packageName + "'\n" +
-                "        minSdk " + minSdk + "\n" +
-                "        targetSdk " + targetSdk + "\n" +
-                "        versionCode 1\n" +
-                "        versionName '1.0'\n" +
-                "    }\n\n" +
-                "    buildTypes {\n" +
-                "        release {\n" +
-                "            minifyEnabled false\n" +
-                "        }\n" +
-                "    }\n" +
-                "    compileOptions {\n" +
-                "        sourceCompatibility JavaVersion.VERSION_1_8\n" +
-                "        targetCompatibility JavaVersion.VERSION_1_8\n" +
-                "    }\n" +
-                "}\n\n" +
-                "dependencies {\n" +
-                "    implementation 'androidx.appcompat:appcompat:1.6.1'\n" +
-                "    implementation 'com.google.android.material:material:1.11.0'\n" +
-                "}\n"
-        );
-
-        // 4. AndroidManifest.xml
-        writeFile(new File(mainDir, "AndroidManifest.xml"),
+        // 1. AndroidManifest.xml (Project root)
+        writeFile(new File(projectDir, "AndroidManifest.xml"),
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
                 "    package=\"" + packageName + "\">\n\n" +
@@ -153,6 +96,20 @@ public class ProjectGenerator {
                 "        </activity>\n" +
                 "    </application>\n" +
                 "</manifest>\n"
+        );
+
+        // 2. project.json (On-Device Compiler Project Metadata)
+        writeFile(new File(projectDir, "project.json"),
+                "{\n" +
+                "  \"name\": \"" + escapeJson(projectName) + "\",\n" +
+                "  \"packageName\": \"" + escapeJson(packageName) + "\",\n" +
+                "  \"template\": \"" + escapeJson(templateType) + "\",\n" +
+                "  \"minSdkVersion\": " + minSdk + ",\n" +
+                "  \"targetSdkVersion\": " + targetSdk + ",\n" +
+                "  \"versionCode\": 1,\n" +
+                "  \"versionName\": \"1.0\",\n" +
+                "  \"buildMode\": \"on-device-compiler-tools\"\n" +
+                "}\n"
         );
 
         // 5. res/values/strings.xml
@@ -375,5 +332,10 @@ public class ProjectGenerator {
                 .replace(">", "&gt;")
                 .replace("\"", "&quot;")
                 .replace("'", "\\'");
+    }
+
+    private static String escapeJson(String text) {
+        if (text == null) return "";
+        return text.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }

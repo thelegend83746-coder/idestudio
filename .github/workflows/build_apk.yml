@@ -52,6 +52,8 @@ jobs:
           🚀 **IDE Studio - Mobile Native Android IDE**
           
           ✨ **What's New in this Build:**
+          - ⚡ **Build & Run APK Button**: Restored prominent green Run button in editor toolbar powered by On-Device compilation pipeline
+          - 📂 **Clean On-Device File Structure**: Removed Gradle boilerplate from projects; uses native mobile manifest, java, and res folders directly
           - 🔍 **Two-Finger Pinch-to-Zoom**: Smooth code scaling from 10sp to 36sp with synchronized line numbers
           - ⌨️ **Mobile Symbol Bar**: Fast programming shortcuts (`TAB`, `{ }`, `( )`, `[ ]`, `;`, `->`, etc.)
           - 🤖 **Universal AI Assistant**: Ollama, Groq, OpenRouter, Google Gemini & OpenAI support

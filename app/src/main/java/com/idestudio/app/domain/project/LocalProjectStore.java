@@ -127,10 +127,12 @@ public class LocalProjectStore {
 
         for (File dir : files) {
             if (dir.isDirectory() && !dir.getName().startsWith(".") && !dir.getName().equalsIgnoreCase("backups")) {
-                File manifest = new File(dir, "app/src/main/AndroidManifest.xml");
-                File gradle = new File(dir, "app/build.gradle");
+                File manifestDirect = new File(dir, "AndroidManifest.xml");
+                File manifestNested = new File(dir, "app/src/main/AndroidManifest.xml");
+                File projectJson = new File(dir, "project.json");
+                File javaDir = new File(dir, "java");
 
-                if (manifest.exists() || gradle.exists()) {
+                if (manifestDirect.exists() || manifestNested.exists() || projectJson.exists() || javaDir.exists()) {
                     String id = "proj_" + Math.abs(dir.getAbsolutePath().hashCode());
                     if (!projectCache.containsKey(id)) {
                         ProjectMeta meta = new ProjectMeta();
@@ -142,6 +144,20 @@ public class LocalProjectStore {
                         meta.setTemplateType("Empty Activity");
                         meta.setMinSdkVersion(21);
                         meta.setTargetSdkVersion(34);
+
+                        if (projectJson.exists()) {
+                            try {
+                                String jsonContent = readFile(projectJson);
+                                if (jsonContent != null) {
+                                    JSONObject pObj = new JSONObject(jsonContent);
+                                    if (pObj.has("packageName")) meta.setPackageName(pObj.getString("packageName"));
+                                    if (pObj.has("template")) meta.setTemplateType(pObj.getString("template"));
+                                    if (pObj.has("minSdkVersion")) meta.setMinSdkVersion(pObj.getInt("minSdkVersion"));
+                                    if (pObj.has("targetSdkVersion")) meta.setTargetSdkVersion(pObj.getInt("targetSdkVersion"));
+                                }
+                            } catch (Exception ignored) {}
+                        }
+
                         projectCache.put(id, meta);
                     }
                 }

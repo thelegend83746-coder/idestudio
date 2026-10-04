@@ -47,10 +47,14 @@ public class FileTreeManager {
                 });
 
                 for (File child : files) {
-                    // Filter out hidden VCS / build folders if needed, or keep standard
-                    if (!child.getName().startsWith(".")) {
-                        node.addChild(buildNodeRecursive(child, depth + 1));
+                    String name = child.getName();
+                    // Filter out hidden files, gradle files/dirs, and build output dirs
+                    if (name.startsWith(".") || name.endsWith(".gradle") || name.equalsIgnoreCase("gradle")
+                            || name.equalsIgnoreCase(".gradle") || name.equalsIgnoreCase("build")
+                            || name.equalsIgnoreCase("gradlew") || name.equalsIgnoreCase("gradlew.bat")) {
+                        continue;
                     }
+                    node.addChild(buildNodeRecursive(child, depth + 1));
                 }
             }
         }
