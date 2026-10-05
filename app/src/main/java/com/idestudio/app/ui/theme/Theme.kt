@@ -51,10 +51,14 @@ fun IDEStudioTheme(
         SideEffect {
             val window = (view.context as? Activity)?.window
             if (window != null) {
-                window.statusBarColor = colorScheme.surface.toArgb()
-                window.navigationBarColor = colorScheme.surface.toArgb()
-                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
-                WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !darkTheme
+                try {
+                    window.statusBarColor = colorScheme.surface.toArgb()
+                    window.navigationBarColor = colorScheme.surface.toArgb()
+                } catch (ignored: Throwable) {}
+                try {
+                    WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+                    WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !darkTheme
+                } catch (ignored: Throwable) {}
             }
         }
     }

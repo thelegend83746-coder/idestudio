@@ -3,8 +3,8 @@ package com.idestudio.app.data.model
 import java.io.File
 
 data class EditorTab(
-    val id: String = file.absolutePath,
     val file: File,
+    val id: String = file.absolutePath,
     val title: String = file.name,
     var content: String = "",
     var originalContent: String = "",

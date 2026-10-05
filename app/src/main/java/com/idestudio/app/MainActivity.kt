@@ -63,15 +63,17 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun checkStoragePermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (!Environment.isExternalStorageManager()) {
-                try {
-                    val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
+        if (Build.VERSION.SDK_INT >= 30) {
+            try {
+                val isManagerMethod = Environment::class.java.getMethod("isExternalStorageManager")
+                val isManager = isManagerMethod.invoke(null) as? Boolean ?: true
+                if (!isManager) {
+                    val intent = Intent("android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION").apply {
                         data = Uri.parse("package:$packageName")
                     }
                     startActivity(intent)
-                } catch (ignored: Exception) {}
-            }
+                }
+            } catch (ignored: Exception) {}
         }
     }
 }

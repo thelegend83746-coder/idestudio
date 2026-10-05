@@ -15,7 +15,7 @@ object ApkInstaller {
                 return Result.failure(IllegalStateException("APK file does not exist at ${apkFile.absolutePath}"))
             }
 
-            val apkUri: Uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            val apkUri: Uri = if (Build.VERSION.SDK_INT >= 24) {
                 FileProvider.getUriForFile(
                     context,
                     "${context.packageName}.fileprovider",

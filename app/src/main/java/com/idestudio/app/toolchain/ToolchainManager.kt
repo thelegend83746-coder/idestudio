@@ -68,6 +68,26 @@ class ToolchainManager(
                             dest.outputStream().use { output -> input.copyTo(output) }
                         }
                     }
+                } else if (item.equals("android.jar.zip", ignoreCase = true)) {
+                    val dest = File(libDir, "android.jar")
+                    if (!dest.exists() || dest.length() == 0L) {
+                        try {
+                            assetManager.open(item).use { input ->
+                                java.util.zip.ZipInputStream(input).use { zis ->
+                                    var entry = zis.nextEntry
+                                    while (entry != null) {
+                                        if (entry.name.endsWith("android.jar")) {
+                                            dest.outputStream().use { output -> zis.copyTo(output) }
+                                            break
+                                        }
+                                        entry = zis.nextEntry
+                                    }
+                                }
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
                 } else if (item in listOf("aapt2", "d8", "zipalign", "apksigner", "ecj")) {
                     val dest = File(binDir, item)
                     if (!dest.exists()) {
