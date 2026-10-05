@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_primary">#6200EE</color>
+    <color name="purple_dark">#3700B3</color>
+    <color name="purple_light">#BB86FC</color>
+    <color name="teal_accent">#03DAC5</color>
+    
+    <color name="run_green">#2E7D32</color>
+    <color name="run_green_hover">#1B5E20</color>
+    <color name="build_error_red">#D32F2F</color>
+    <color name="build_warning_amber">#FFA000</color>
+
+    <color name="background_light">#FAFAFA</color>
+    <color name="surface_light">#FFFFFF</color>
+    <color name="card_stroke">#E0E0E0</color>
+    
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="text_hint">#9E9E9E</color>
+    
+    <color name="console_background">#1A1A1A</color>
+    <color name="console_text">#E0E0E0</color>
+    <color name="console_accent">#80CBC4</color>
+</resources>
