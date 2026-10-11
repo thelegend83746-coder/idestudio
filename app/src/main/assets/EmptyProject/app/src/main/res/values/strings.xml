@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EmptyProject</string>
+    <string name="welcome_message">Welcome to EmptyProject!</string>
+    <string name="action_click_me">Click Me</string>
+    <string name="button_clicked_message">Hello from IDE STUDIO!</string>
+</resources>

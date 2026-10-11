@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand & Accent Colors -->
+    <color name="primary">#3884FF</color>
+    <color name="primary_variant">#1E60D5</color>
+    <color name="secondary">#00C853</color>
+    <color name="secondary_variant">#009624</color>
+    <color name="accent_ai">#8A2BE2</color>
+
+    <!-- Surfaces & Backgrounds -->
+    <color name="bg_dark">#18181A</color>
+    <color name="surface_dark">#1E1F22</color>
+    <color name="surface_elevated">#2B2D30</color>
+    <color name="editor_gutter_dark">#232428</color>
+    <color name="border_subtle">#35373C</color>
+
+    <!-- Text & Indicators -->
+    <color name="text_primary">#E6EDF3</color>
+    <color name="text_secondary">#8B949E</color>
+    <color name="text_tertiary">#6E7681</color>
+    <color name="status_success">#3FB950</color>
+    <color name="status_warning">#D29922</color>
+    <color name="status_error">#F85149</color>
+    <color name="status_info">#58A6FF</color>
+
+    <!-- Code Syntax Highlighting Colors -->
+    <color name="syntax_keyword">#FF7B72</color>
+    <color name="syntax_type">#FFA657</color>
+    <color name="syntax_string">#A5D6FF</color>
+    <color name="syntax_number">#79C0FF</color>
+    <color name="syntax_comment">#8B949E</color>
+    <color name="syntax_annotation">#D2A8FF</color>
+    <color name="syntax_xml_tag">#7EE787</color>
+    <color name="syntax_xml_attr">#79C0FF</color>
+</resources>

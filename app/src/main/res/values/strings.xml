@@ -1,0 +1,108 @@
+<resources>
+    <string name="app_name">IDE STUDIO</string>
+    <string name="app_tagline">Native Android IDE &amp; On-Device APK Builder</string>
+
+    <!-- Navigation & Titles -->
+    <string name="title_home">Projects</string>
+    <string name="title_create_project">Create Project</string>
+    <string name="title_editor">Code Editor</string>
+    <string name="title_settings">Settings</string>
+    <string name="title_build_ai">Build AI</string>
+    <string name="title_build_log">Build Log Output</string>
+
+    <!-- Home -->
+    <string name="empty_projects_title">No Projects Found</string>
+    <string name="empty_projects_desc">Create your first Android project or import an existing Java + XML project.</string>
+    <string name="action_create_project">New Project</string>
+    <string name="action_open_project">Open</string>
+    <string name="action_delete_project">Delete</string>
+    <string name="action_rename_project">Rename</string>
+
+    <!-- Create Project Wizard -->
+    <string name="step_select_template">Select Template</string>
+    <string name="step_configure_project">Configure Project</string>
+    <string name="field_app_name">Application Name</string>
+    <string name="field_package_name">Package Name</string>
+    <string name="field_save_location">Save Location</string>
+    <string name="field_min_sdk">Minimum SDK</string>
+    <string name="field_target_sdk">Target SDK</string>
+    <string name="field_language">Language</string>
+    <string name="action_previous">Previous</string>
+    <string name="action_create">Create</string>
+
+    <!-- Templates -->
+    <string name="template_simple_title">Simple App</string>
+    <string name="template_simple_desc">Clean single-screen Android application with standard activity and interactive layout.</string>
+    <string name="template_fullscreen_title">Full Screen App</string>
+    <string name="template_fullscreen_desc">Immersive full-screen application layout with edge-to-edge view and hidden status bar.</string>
+    <string name="template_drawer_title">Navigation Drawer App</string>
+    <string name="template_drawer_desc">Structured Android application with slide-out side navigation drawer and menu sections.</string>
+    <string name="template_basic_title">Basic Activity</string>
+    <string name="template_basic_desc">Standard Android project with Toolbar, FloatingActionButton, and CoordinatorLayout.</string>
+    <string name="template_empty_title">Empty Activity</string>
+    <string name="template_empty_desc">Minimal baseline activity template designed for clean, customized development.</string>
+
+    <!-- Editor -->
+    <string name="action_save">Save</string>
+    <string name="action_build">Build APK</string>
+    <string name="action_ai_assistant">Build AI</string>
+    <string name="action_undo">Undo</string>
+    <string name="action_redo">Redo</string>
+    <string name="action_close">Close</string>
+    <string name="no_file_open">No file selected. Choose a file from Project Explorer.</string>
+    <string name="unsaved_changes_warning">You have unsaved changes. Do you want to save before closing?</string>
+
+    <!-- Project Explorer -->
+    <string name="explorer_title">Project Files</string>
+    <string name="action_new_file">New File</string>
+    <string name="action_new_folder">New Folder</string>
+    <string name="action_delete_file">Delete</string>
+    <string name="action_rename_file">Rename</string>
+    <string name="action_refresh">Refresh Tree</string>
+
+    <!-- Build Log -->
+    <string name="build_state_idle">Idle</string>
+    <string name="build_state_preparing">Preparing build environment…</string>
+    <string name="build_state_resources">Processing Android XML resources &amp; manifest…</string>
+    <string name="build_state_compiling">Compiling Java source files (ECJ)…</string>
+    <string name="build_state_dexing">Converting bytecode to DEX (D8)…</string>
+    <string name="build_state_packaging">Packaging APK archive…</string>
+    <string name="build_state_aligning">Aligning APK (zipalign)…</string>
+    <string name="build_state_signing">Signing APK (v1/v2)…</string>
+    <string name="build_state_verifying">Verifying APK structure &amp; signature…</string>
+    <string name="build_state_success">Build Succeeded!</string>
+    <string name="build_state_failed">Build Failed</string>
+    <string name="action_install_apk">Install APK</string>
+    <string name="action_share_apk">Share APK</string>
+
+    <!-- Build AI -->
+    <string name="ai_api_key_label">Ollama Cloud / Remote API Key</string>
+    <string name="ai_endpoint_label">Provider Endpoint URL</string>
+    <string name="ai_model_label">Active Model</string>
+    <string name="ai_instructions_label">System Instructions / Persona</string>
+    <string name="action_test_connection">Test Connection</string>
+    <string name="action_save_ai_settings">Save Settings</string>
+    <string name="ai_connected">Provider Connected</string>
+    <string name="ai_not_connected">Not Connected</string>
+
+    <!-- Settings Categories -->
+    <string name="settings_app">Application</string>
+    <string name="settings_editor">Editor</string>
+    <string name="settings_build_run">Build &amp; Run</string>
+    <string name="settings_about">About Us</string>
+    <string name="settings_ai">Build AI Settings</string>
+
+    <!-- Editor Settings -->
+    <string name="setting_font_size">Font Size</string>
+    <string name="setting_tab_size">Tab Size</string>
+    <string name="setting_word_wrap">Word Wrap</string>
+    <string name="setting_line_numbers">Show Line Numbers</string>
+    <string name="setting_highlight_line">Highlight Current Line</string>
+    <string name="setting_autocomplete">Auto Complete</string>
+    <string name="setting_dark_theme">Dark Editor Theme</string>
+
+    <!-- Common Actions -->
+    <string name="action_cancel">Cancel</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_apply">Apply</string>
+</resources>

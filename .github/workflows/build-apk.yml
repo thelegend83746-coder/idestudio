@@ -1,0 +1,70 @@
+name: Build & Release IDE STUDIO APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Make Gradlew Executable
+        run: chmod +x gradlew
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Prepare APK Output
+        run: |
+          mkdir -p output_apk
+          cp app/build/outputs/apk/debug/app-debug.apk output_apk/IDE_Studio-debug.apk
+          ls -lh output_apk/
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: IDE_Studio-debug-apk
+          path: output_apk/IDE_Studio-debug.apk
+          retention-days: 30
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
+        with:
+          tag_name: v1.0.0
+          name: "IDE STUDIO v1.0.0 (Release Build)"
+          body: |
+            ### 🚀 IDE STUDIO — Native Android IDE & APK Builder
+            Fully functional on-device Android development environment and APK builder.
+            
+            #### Features Included:
+            - **Jetpack Compose + Material 3 UI**
+            - **On-Device Compiler Toolchain**: AAPT2, ECJ, D8, ZipAlign, ApkSigner
+            - **Bundled Android SDK Platforms**: API 30 to API 36
+            - **Single Unified Template Engine**: Generates genuine Java + XML projects
+            - **Syntax Highlighting & Project Explorer**
+            - **Offline Build Support**
+            
+            📲 **Download the APK below (`IDE_Studio-debug.apk`) and install it directly on your Android device!**
+          files: output_apk/IDE_Studio-debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
