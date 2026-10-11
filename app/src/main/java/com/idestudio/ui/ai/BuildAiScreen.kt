@@ -21,6 +21,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.idestudio.ai.ConnectionTestResult
 import com.idestudio.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -95,7 +96,7 @@ fun BuildAiScreen(
                 label = { Text("Ollama Cloud API Key") },
                 placeholder = { Text("ollama_key_...") },
                 singleLine = true,
-                visualTransformation = if (isApiKeyVisible) VisualTransformation.Identity else PasswordVisualTransformation(),
+                visualTransformation = if (isApiKeyVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 trailingIcon = {
                     IconButton(onClick = { isApiKeyVisible = !isApiKeyVisible }) {
@@ -134,8 +135,9 @@ fun BuildAiScreen(
             }
 
             // Connection Result Badge
-            uiState.testResult?.let { result ->
-                when (result) {
+            val currentTestResult = uiState.testResult
+            if (currentTestResult != null) {
+                when (currentTestResult) {
                     is ConnectionTestResult.Success -> {
                         Surface(
                             color = StatusSuccess.copy(alpha = 0.15f),
@@ -146,8 +148,8 @@ fun BuildAiScreen(
                                 Icon(Icons.Default.CheckCircle, contentDescription = null, tint = StatusSuccess)
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Column {
-                                    Text(result.message, fontWeight = FontWeight.Bold, color = StatusSuccess, fontSize = 13.sp)
-                                    Text("Latency: ${result.latencyMs}ms · Models found: ${result.availableModels.size}", color = TextSecondary, fontSize = 11.sp)
+                                    Text(currentTestResult.message, fontWeight = FontWeight.Bold, color = StatusSuccess, fontSize = 13.sp)
+                                    Text("Latency: ${currentTestResult.latencyMs}ms · Models found: ${currentTestResult.availableModels.size}", color = TextSecondary, fontSize = 11.sp)
                                 }
                             }
                         }
@@ -161,7 +163,7 @@ fun BuildAiScreen(
                             Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.ErrorOutline, contentDescription = null, tint = StatusError)
                                 Spacer(modifier = Modifier.width(10.dp))
-                                Text(result.message, color = StatusError, fontSize = 13.sp)
+                                Text(currentTestResult.message, color = StatusError, fontSize = 13.sp)
                             }
                         }
                     }

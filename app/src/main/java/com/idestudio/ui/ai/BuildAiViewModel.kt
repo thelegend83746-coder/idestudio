@@ -3,6 +3,8 @@ package com.idestudio.ui.ai
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.idestudio.ai.ConnectionTestResult
+import com.idestudio.ai.OllamaClient
 import com.idestudio.data.model.BuildAiSettings
 import com.idestudio.data.repository.PreferencesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
